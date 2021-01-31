@@ -15,6 +15,7 @@ public class Myftpserver {
         // assign port
         Myftpserver ftpServer = new Myftpserver();
         ServerSocket skt = new ServerSocket( ftpServer.serverPort );
+        System.out.println("FTP port: " + String.valueOf(ftpServer.serverPort));
         // start port
         do {
             skt.accept();
@@ -24,13 +25,10 @@ public class Myftpserver {
 
     private static void printBanner() {
         System.out.println("\t******************************************\n" +
-                           "\t*****     FTP Server Port: 2121     ******\n" +
+                           "\t*****         FTP Server            ******\n" +
                            "\t******************************************\n");
     }
 
-    private void ftpServer() {
-
-    }
 
 }
 

@@ -4,6 +4,9 @@ import java.net.Socket;
 import java.io.File;
 import java.util.Scanner;
 import java.io.PrintStream;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+
 
 /**
  * This is the ftp client class.
@@ -17,15 +20,18 @@ public class Myftp {
 
     public static void main(String[] args) throws IOException {
         Myftp myftp = new Myftp();
-        myftp.welcomeBanner();   // print welcome msg
-        myftp.inputServerInfo(); // input server info
-        myftp.connectServer(myftp.serverName, myftp.serverPort);
+        myftp.welcomeBanner();           // print welcome msg
+        myftp.inputServerInfo();         // input server info
+        myftp.connectServer(myftp.serverName, myftp.serverPort);   // connect server
 
 
         // cmd
+        Scanner cmdRec = new Scanner(System.in);
         do {
             // receive cmd
-
+            myftp.printMsg("myftp> ");
+            String cmd = cmdRec.nextLine().trim().toLowerCase();
+            myftp.cmdInterface( cmd );
 
             // handle cmd
 
@@ -103,13 +109,16 @@ public class Myftp {
     }
 
     private void welcomeBanner() {
-        printMsg("\t******************************************\n" +
+        printlnMsg("\t******************************************\n" +
                  "\t*****          FTP Client           ******\n" +
                  "\t******************************************\n");
     }
 
-    private void printMsg(String msg) {
+    private void printlnMsg(String msg) {
         System.out.println(msg);
+    }
+    private void printMsg(String msg) {
+        System.out.print(msg);
     }
 
     private void setServerName(String name) {
@@ -125,9 +134,9 @@ public class Myftp {
         // Get server name and port from input
         do {
             Scanner inputs = new Scanner(System.in);
-            System.out.print("Server name: ");
+            printMsg("Server name: ");
             String inputServerName = inputs.nextLine();
-            System.out.print("Server port: ");
+            printMsg("Server port: ");
             Integer inputServerPort = inputs.nextInt();
             // check input legality
             ifAgain = (0 < inputServerPort &&
@@ -140,7 +149,7 @@ public class Myftp {
                 this.setServerName(inputServerName);
                 this.setServerPort(inputServerPort);
             } else {
-                printMsg("Illegal input! Try again");
+                printlnMsg("Illegal input! Try again");
             }
         } while ( ifAgain );
 
@@ -152,7 +161,7 @@ public class Myftp {
             Socket socket = new Socket(serverName, serverPort);
             PrintStream recSkt = new PrintStream(socket.getOutputStream(), true);
         } catch (IOException eIO) {
-            printMsg("Connection failed");
+            printlnMsg("Connection failed");
             eIO.printStackTrace();
         }
 
