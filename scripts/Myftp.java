@@ -27,6 +27,7 @@ public class Myftp {
 
         // cmd
         Scanner cmdRec = new Scanner(System.in);
+
         do {
             // receive cmd
             myftp.printMsg("myftp> ");
@@ -62,7 +63,7 @@ public class Myftp {
         } else if (cmd.equals("quit")) {
             cmdQuit();
         } else {
-            printMsg("Command not found! Try again...");
+            printlnMsg("Command not found! Try again...");
         }
 
     }
@@ -70,7 +71,7 @@ public class Myftp {
 
     // cmd ls
     private void cmdLs() {
-
+        printlnMsg(System.getProperty("user.dir"));
     }
 
     // cmd get
@@ -111,7 +112,8 @@ public class Myftp {
     private void welcomeBanner() {
         printlnMsg("\t******************************************\n" +
                  "\t*****          FTP Client           ******\n" +
-                 "\t******************************************\n");
+                 "\t******************************************\n" +
+                 "\tSupported commands: pwd, ls, get, put, delete, cd, mkdir, quit\n");
     }
 
     private void printlnMsg(String msg) {
