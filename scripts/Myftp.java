@@ -1,38 +1,25 @@
 
+import java.io.IOException;
 import java.net.Socket;
 import java.io.File;
 import java.util.Scanner;
+import java.io.PrintStream;
 
 /**
  * This is the ftp client class.
- *
+ * @author
  */
 
 public class Myftp {
 
+    private String serverName;
+    private Integer serverPort;
 
-
-
-
-    public static void main(String[] args) {
-
-        boolean ifExit = true;
-
-
-        printMsg("\t******************************************\n" +
-                "\t*****          FTP Client           ******\n" +
-                "\t******************************************\n");
-
-        // Got server name and port
-        do {
-            Scanner inputs = new Scanner(System.in);
-            System.out.print("FTP server name: ");
-            String serverName = inputs.nextLine();
-            System.out.print("FTP server port: ");
-            Integer serverPort = inputs.nextInt();
-            // connect name / port
-
-        } while ( "connection".equals("true"));
+    public static void main(String[] args) throws IOException {
+        Myftp myftp = new Myftp();
+        myftp.welcomeBanner();   // print welcome msg
+        myftp.inputServerInfo(); // input server info
+        myftp.connectServer(myftp.serverName, myftp.serverPort);
 
 
         // cmd
@@ -43,7 +30,7 @@ public class Myftp {
             // handle cmd
 
 
-        } while ( false == ifExit );
+        } while ( false );
 
 
     }
@@ -115,8 +102,60 @@ public class Myftp {
 
     }
 
-    private static void printMsg(String msg) {
+    private void welcomeBanner() {
+        printMsg("\t******************************************\n" +
+                 "\t*****          FTP Client           ******\n" +
+                 "\t******************************************\n");
+    }
+
+    private void printMsg(String msg) {
         System.out.println(msg);
+    }
+
+    private void setServerName(String name) {
+        this.serverName = name;
+    }
+
+    private void setServerPort(Integer port) {
+        this.serverPort = port;
+    }
+
+    private void inputServerInfo() {
+        boolean ifAgain;
+        // Get server name and port from input
+        do {
+            Scanner inputs = new Scanner(System.in);
+            System.out.print("Server name: ");
+            String inputServerName = inputs.nextLine();
+            System.out.print("Server port: ");
+            Integer inputServerPort = inputs.nextInt();
+            // check input legality
+            ifAgain = (0 < inputServerPort &&
+                       65353 > inputServerPort &&
+                       !inputServerName.isEmpty()
+                      ) ? false : true;
+
+            // global values
+            if (!ifAgain) {
+                this.setServerName(inputServerName);
+                this.setServerPort(inputServerPort);
+            } else {
+                printMsg("Illegal input! Try again");
+            }
+        } while ( ifAgain );
+
+    }
+
+    private void connectServer(String serverName, Integer serverPort) throws IOException {
+        // connect server
+        try {
+            Socket socket = new Socket(serverName, serverPort);
+            PrintStream recSkt = new PrintStream(socket.getOutputStream(), true);
+        } catch (IOException eIO) {
+            printMsg("Connection failed");
+            eIO.printStackTrace();
+        }
+
     }
 
 }
