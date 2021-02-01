@@ -1,4 +1,6 @@
 
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.Socket;
 import java.io.File;
@@ -17,28 +19,48 @@ public class Myftp {
 
     private String serverName;
     private Integer serverPort;
+    private Socket socket;
+    private PrintStream recSkt;
+    private BufferedReader sendSkt;
+    private boolean openPort = true;
 
     public static void main(String[] args) throws IOException {
         Myftp myftp = new Myftp();
         myftp.welcomeBanner();           // print welcome msg
         myftp.inputServerInfo();         // input server info
-        myftp.connectServer(myftp.serverName, myftp.serverPort);   // connect server
+        // connect server
+        try {
+            myftp.printlnMsg("try connect...");
+            // connect to server
+            myftp.socket = new Socket(myftp.serverName, myftp.serverPort);
+            // read server output
+            myftp.recSkt = new PrintStream( myftp.socket.getOutputStream(), true);
+            // send to server
+            myftp.sendSkt = new BufferedReader( new InputStreamReader( myftp.socket.getInputStream() ) );
+            // login succeed
+            myftp.recSkt.println("********* Login succeed! *********");
 
+        } catch (IOException eIO) {
+            myftp.printlnMsg("Connection failed. Please check config or network.");
+            //eIO.printStackTrace();
+        }
 
-        // cmd
+        // send cmd
         Scanner cmdRec = new Scanner(System.in);
-
         do {
-            // receive cmd
+            // give cmd
             myftp.printMsg("myftp> ");
             String cmd = cmdRec.nextLine().trim().toLowerCase();
-            myftp.cmdInterface( cmd );
 
             // handle cmd
+            myftp.cmdInterface( cmd );
 
+        } while ( myftp.openPort );
 
-        } while ( false );
-
+        // close connection
+        myftp.recSkt.close();
+        myftp.sendSkt.close();
+        myftp.socket.close();
 
     }
 
@@ -71,6 +93,7 @@ public class Myftp {
 
     // cmd ls
     private void cmdLs() {
+        // client ls
         printlnMsg(System.getProperty("user.dir"));
     }
 
@@ -91,7 +114,7 @@ public class Myftp {
 
     // cmd pwd
     private void cmdPwd() {
-
+        recSkt.println("pwd");
     }
 
     // cmd cd
@@ -104,9 +127,9 @@ public class Myftp {
 
     }
 
-    // cmd cd
+    // cmd quit
     private void cmdQuit() {
-
+        openPort = false;
     }
 
     private void welcomeBanner() {
