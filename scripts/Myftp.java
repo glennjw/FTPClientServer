@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.io.File;
 import java.util.Scanner;
+import java.io.PrintWriter;
 import java.io.PrintStream;
 import java.nio.file.Paths;
 import java.nio.file.Path;
@@ -20,7 +21,7 @@ public class Myftp {
     private String serverName;
     private Integer serverPort;
     private Socket socket;
-    private PrintStream recSkt;
+    private PrintWriter recSkt;
     private BufferedReader sendSkt;
     private boolean openPort = true;
 
@@ -30,15 +31,24 @@ public class Myftp {
         myftp.inputServerInfo();         // input server info
         // connect server
         try {
-            myftp.printlnMsg("try connect...");
             // connect to server
             myftp.socket = new Socket(myftp.serverName, myftp.serverPort);
             // read server output
-            myftp.recSkt = new PrintStream( myftp.socket.getOutputStream(), true);
+            myftp.recSkt = new PrintWriter( myftp.socket.getOutputStream(), true);
             // send to server
             myftp.sendSkt = new BufferedReader( new InputStreamReader( myftp.socket.getInputStream() ) );
             // login succeed
-            myftp.recSkt.println("********* Login succeed! *********");
+
+            myftp.recSkt.println("ls");
+            //myftp.recSkt.println("");
+            System.out.println("===================");
+            String recString = myftp.sendSkt.readLine();
+            System.out.println("*******************");
+            do {
+                System.out.println("start receiving...");
+                System.out.println(recString);
+                recString = myftp.sendSkt.readLine();
+            } while ( false );
 
         } catch (IOException eIO) {
             myftp.printlnMsg("Connection failed. Please check config or network.");
@@ -66,26 +76,30 @@ public class Myftp {
 
 
     // all supported cmd
-    private void cmdInterface(String cmd) {
+    private void cmdInterface(String input) {
+        String cmd, path;
+        cmd = input.split(" ")[0];
+        if (!(null==input.split(" ")[1])) path = null;
         // check cmd
-        if (cmd.equals("get")) {
-            cmdGet();
-        } else if (cmd.equals("put")) {
-            cmdPut();
-        } else if (cmd.equals("delete")) {
-            cmdDelete();
-        } else if (cmd.equals("ls")) {
-            cmdLs();
-        } else if (cmd.equals("cd")) {
-            cmdCd();
-        } else if (cmd.equals("mkdir")) {
-            cmdMkdir();
-        } else if (cmd.equals("pwd")) {
-            cmdPwd();
-        } else if (cmd.equals("quit")) {
-            cmdQuit();
-        } else {
-            printlnMsg("Command not found! Try again...");
+        switch (cmd) {
+            case "get":
+                cmdGet();
+            case "put":
+                cmdPut();
+            case "delete":
+                cmdDelete();
+            case "ls":
+                cmdLs();
+            case "cd":
+                cmdCd();
+            case "mkdir":
+                cmdMkdir();
+            case "pwd":
+                cmdPwd();
+            case "quit":
+                cmdQuit();
+            default:
+                System.out.println("Command not found! Try again...");
         }
 
     }
@@ -184,7 +198,7 @@ public class Myftp {
         // connect server
         try {
             Socket socket = new Socket(serverName, serverPort);
-            PrintStream recSkt = new PrintStream(socket.getOutputStream(), true);
+            PrintWriter recSkt = new PrintWriter(socket.getOutputStream(), true);
         } catch (IOException eIO) {
             printlnMsg("Connection failed");
             eIO.printStackTrace();
