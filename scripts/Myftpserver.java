@@ -1,10 +1,10 @@
 
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.PrintWriter;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.util.List;
 
 
 /**
@@ -19,13 +19,15 @@ public class Myftpserver {
         printBanner();
         System.out.println("FTP port: 2121");
         ftpserver.run();
+        //ftpserver.close();
+
     }
 
     private static void printBanner() {
         System.out.println("\t******************************************\n" +
                 "\t*****         FTP Server            ******\n" +
                 "\t******************************************\n" +
-                "\t Press Ctl+c to leave."
+                "\t Press Ctl+c to exit."
         );
     }
 
@@ -37,30 +39,62 @@ public class Myftpserver {
  */
 class Ftpserver {
     final int serverPort = 2121;
+    ServerSocket skt = new ServerSocket(serverPort);
+    //BufferedReader msgFromClient;
+    //PrintWriter msgToClient;
+    DataInputStream msgFromClient;
+    DataOutputStream msgToClient;
+    String cur_path = System.getProperty("user.dir");
+
+    Ftpserver() throws IOException { }
 
     public void run() throws IOException {
-        // assign port
-        ServerSocket skt = new ServerSocket(serverPort);
-        Socket acceptedSkt = skt.accept();
-        //msgFromClient = new DataInputStream( new BufferedReader( skt.getInputStream() ) );
-        BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(acceptedSkt.getInputStream()));
-        PrintWriter msgToClient = new PrintWriter(acceptedSkt.getOutputStream(), true);
-        System.out.println("New client connected.");
+        Socket acceptedSkt;
 
-        // start port
+        // try connect
+        try {
+            acceptedSkt = skt.accept();
+            //msgFromClient = new BufferedReader(new InputStreamReader(acceptedSkt.getInputStream()));
+            //msgToClient = new PrintWriter(acceptedSkt.getOutputStream(), true);
+            msgFromClient = new DataInputStream( new BufferedInputStream(acceptedSkt.getInputStream()));
+            msgToClient = new DataOutputStream( acceptedSkt.getOutputStream() );
+            System.out.println("New client connected.");
+        } catch (IOException exc) {
+            System.out.println("Connection failed.");
+        }
+
+        // execute cmd
         do {
-            String recMsg = msgFromClient.readLine();     // received msg
+            //msgFromClient = new BufferedReader(new InputStreamReader(acceptedSkt.getInputStream()));
+            //msgToClient = new PrintWriter(acceptedSkt.getOutputStream(), true);
+            String recMsg = msgFromClient.readUTF();     // received msg
+            cmdInterface(recMsg);
+            //msgToClient.flush();
+            //msgFromClient.reset();
+        } while ( true );          // set to false for 1 time test purpose
 
-        } while (false);
+        //acceptedSkt.close();
+        //msgFromClient.close();
     }
 
     // all supported cmd
-    private void cmdInterface(String input) {
-        String cmd, path;
-        cmd = input.split(" ")[0];
-        if (!(null==input.split(" ")[1])) path = null;
+    private void cmdInterface(String input) throws IOException {
+        String cmd = "";
+        String path = "";
+        // split and assign input to cmd and path
+        input.trim();
+        if ( input.contains(" ") ) {
+            String[] inputSplited = input.split(" ");
+            cmd = inputSplited[0];
+            path = inputSplited[1];
+        } else {
+            cmd = input;
+        }
+
         // check cmd
         switch (cmd) {
+            default:
+                System.out.println("Command not found! Try again...");
             case "get":
                 cmdGet(path);
             case "put":
@@ -73,12 +107,10 @@ class Ftpserver {
                 cmdCd(path);
             case "mkdir":
                 cmdMkdir(path);
-            case "pwd":
+            case "pwd":                  // done
                 cmdPwd();
             case "quit":
                 cmdQuit();
-            default:
-                System.out.println("Command not found! Try again...");
         }
 
     }
@@ -99,21 +131,35 @@ class Ftpserver {
         //ls path
     }
 
-    private void cmdCd(String path) {
+    private void cmdCd(String path) throws IOException {
         //cd path
+        cur_path =  path.trim() + "/" ;
+        msgToClient.writeUTF( cur_path );
     }
 
     private void cmdMkdir(String path) {
         //mkdir path
     }
 
-    private void cmdPwd() {
+    private void cmdPwd() throws IOException {
         //pwd path
+        System.out.println( cur_path );
+        msgToClient.writeUTF( cur_path );
     }
 
-    private void cmdQuit() {
+    private void cmdQuit() throws IOException {
 
+        msgToClient.writeUTF("Bye!");
+        //msgToClient.close();
+        //msgFromClient.close();
+        skt.close();
     }
+
+    public void close() throws IOException {
+        skt.close();
+    }
+
+
 }
 
 

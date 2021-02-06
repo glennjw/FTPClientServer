@@ -1,14 +1,7 @@
 
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
-import java.io.File;
 import java.util.Scanner;
-import java.io.PrintWriter;
-import java.io.PrintStream;
-import java.nio.file.Paths;
-import java.nio.file.Path;
 
 
 /**
@@ -21,9 +14,11 @@ public class Myftp {
     private String serverName;
     private Integer serverPort;
     private Socket socket;
-    private PrintWriter recSkt;
-    private BufferedReader sendSkt;
-    private boolean openPort = true;
+    private PrintWriter sendSkt;
+    private BufferedReader recSkt;
+    //private DataOutputStream sendSkt;
+    //private DataInputStream recSkt;
+    private boolean openPort = true;    // keep client running
 
     public static void main(String[] args) throws IOException {
         Myftp myftp = new Myftp();
@@ -33,55 +28,56 @@ public class Myftp {
         try {
             // connect to server
             myftp.socket = new Socket(myftp.serverName, myftp.serverPort);
-            // read server output
-            myftp.recSkt = new PrintWriter( myftp.socket.getOutputStream(), true);
-            // send to server
-            myftp.sendSkt = new BufferedReader( new InputStreamReader( myftp.socket.getInputStream() ) );
-            // login succeed
+            myftp.sendSkt = new PrintWriter( myftp.socket.getOutputStream(), true);
+            myftp.recSkt = new BufferedReader( new InputStreamReader( myftp.socket.getInputStream() ) );
+            //myftp.recSkt = new DataInputStream( new BufferedInputStream(myftp.socket.getInputStream()));
+            //myftp.sendSkt = new DataOutputStream( myftp.socket.getOutputStream() );
 
-            myftp.recSkt.println("ls");
-            //myftp.recSkt.println("");
-            System.out.println("===================");
-            String recString = myftp.sendSkt.readLine();
-            System.out.println("*******************");
-            do {
-                System.out.println("start receiving...");
-                System.out.println(recString);
-                recString = myftp.sendSkt.readLine();
-            } while ( false );
 
         } catch (IOException eIO) {
-            myftp.printlnMsg("Connection failed. Please check config or network.");
+            myftp.printlnMsg("Connecting failed. Please check config or network.");
             //eIO.printStackTrace();
         }
 
         // send cmd
         Scanner cmdRec = new Scanner(System.in);
         do {
-            // give cmd
+            //myftp.sendSkt = new PrintWriter( myftp.socket.getOutputStream(), true);
+            //myftp.recSkt = new BufferedReader( new InputStreamReader( myftp.socket.getInputStream() ) );
+            //myftp.recSkt = new DataInputStream( new BufferedInputStream(myftp.socket.getInputStream()));
+            //myftp.sendSkt = new DataOutputStream( myftp.socket.getOutputStream() );
+            // input cmd
             myftp.printMsg("myftp> ");
             String cmd = cmdRec.nextLine().trim().toLowerCase();
-
-            // handle cmd
+            // execute cmd
             myftp.cmdInterface( cmd );
+            // cleanup
 
         } while ( myftp.openPort );
 
-        // close connection
-        myftp.recSkt.close();
-        myftp.sendSkt.close();
-        myftp.socket.close();
+        //myftp.close();
 
     }
 
 
     // all supported cmd
-    private void cmdInterface(String input) {
-        String cmd, path;
-        cmd = input.split(" ")[0];
-        if (!(null==input.split(" ")[1])) path = null;
+    private void cmdInterface(String input) throws IOException {
+        String cmd = "";
+        String path = "";
+        // split and assign input to cmd and path
+        input.trim();
+        if ( input.contains(" ") ) {
+            String[] inputSplited = input.split(" ");
+            cmd = inputSplited[0];
+            path = inputSplited[1];
+        } else {
+            cmd = input;
+        }
+
         // check cmd
         switch (cmd) {
+            default:
+                System.out.println("Command not found! Try again...");
             case "get":
                 cmdGet();
             case "put":
@@ -98,8 +94,6 @@ public class Myftp {
                 cmdPwd();
             case "quit":
                 cmdQuit();
-            default:
-                System.out.println("Command not found! Try again...");
         }
 
     }
@@ -127,8 +121,9 @@ public class Myftp {
     }
 
     // cmd pwd
-    private void cmdPwd() {
-        recSkt.println("pwd");
+    private void cmdPwd() throws IOException {
+        sendSkt.println("pwd");
+        System.out.println( recSkt.readLine() );
     }
 
     // cmd cd
@@ -142,8 +137,11 @@ public class Myftp {
     }
 
     // cmd quit
-    private void cmdQuit() {
+    private void cmdQuit() throws IOException {
         openPort = false;
+        sendSkt.println("quit");
+        System.out.println( this.recSkt.readLine() );
+        close();
     }
 
     private void welcomeBanner() {
@@ -205,6 +203,13 @@ public class Myftp {
         }
 
     }
+
+    public void close() throws IOException {
+        recSkt.close();
+        sendSkt.close();
+        socket.close();
+    }
+
 
 }
 
