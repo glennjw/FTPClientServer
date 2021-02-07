@@ -35,15 +35,12 @@ public class Myftpserver {
 /**
  * This is the server class.
  */
-class Ftpserver {
+class Ftpserver {         // for each client
     final int serverPort = 2121;
     ServerSocket skt = new ServerSocket(serverPort);
     String response;
-    //BufferedReader msgFromClient;
-    //PrintWriter msgToClient;
-    //DataInputStream msgFromClient;
-    //DataOutputStream msgToClient;
     String cur_path = System.getProperty("user.dir");
+    boolean ifQuit = false;
 
     Ftpserver() throws IOException {
     }
@@ -69,10 +66,13 @@ class Ftpserver {
             PrintWriter msgToClient = new PrintWriter(acceptedSkt.getOutputStream(), true);
             String recMsg = msgFromClient.readLine();     // received msg
             cmdInterface(recMsg);
-            //msgToClient.flush();
-            //msgFromClient.reset();
             msgToClient.println( response );
-        } while (true);          // set to false for 1 time test purpose
+            if ( true == ifQuit ) {
+                msgFromClient.close();
+                msgToClient.close();
+                acceptedSkt.close();
+            }
+        } while (!ifQuit);          // set to false for 1 time test purpose
 
         //acceptedSkt.close();
         //msgFromClient.close();
@@ -151,16 +151,12 @@ class Ftpserver {
 
     private void cmdPwd() throws IOException {
         //pwd path
-        System.out.println( cur_path );
         response = cur_path;
     }
 
     private void cmdQuit() throws IOException {
-
-        //msgToClient.write("Bye!");
-        //msgToClient.close();
-        //msgFromClient.close();
-        skt.close();
+        ifQuit = true;
+        response = "Bye!";
     }
 
     public void close() throws IOException {
