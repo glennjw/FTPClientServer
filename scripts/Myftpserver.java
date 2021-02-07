@@ -148,23 +148,38 @@ class Ftpserver {         // for each client
     private void cmdLs(String path) {
         // check if path empty
         path = ""==path ? cur_path : path;
-        System.out.println("path is: " + path);
         // list path
         String files = "";
         File curDir = new File(cur_path + "/");
         File[] curFiles = curDir.listFiles();
-        System.out.println("File list is: " + curFiles.toString());
         for (File file : curFiles) {
-            System.out.println(file.getName());
-            files += (file.getName() + "\t");
+            files += file.isFile() ? (file.getName() + "\t") : (file.getName() + "/\t");
         }
         response = files;
-
     }
 
     private void cmdCd(String path) throws IOException {
         //cd path
-        //cur_path = path.trim() + "/";
+        if (""==path) {
+            response = "Please specify directory.";
+            return;
+        }
+        // remove / from path
+        if (path.endsWith("/")) { path = path.substring(0,path.length()-1);}
+        File cur_dir = new File(cur_path);
+        if ("..".equalsIgnoreCase(path)) {
+            cur_path = cur_dir.getParent() + "/";
+            response = cur_path;
+        } else {
+            System.out.println("handle normal path... : "+path);
+            File dest_dir = new File(path);
+            if (dest_dir.exists()) {
+                cur_path = dest_dir.getName();
+                response = dest_dir.getName()+"/";
+            } else {
+                response = "Directory not found.";
+            }
+        }
     }
 
     private void cmdMkdir(String path) {

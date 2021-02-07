@@ -50,9 +50,12 @@ public class Myftp {
 
             // execute cmd
             myftp.cmdInterface(input);
-            sendSkt.println(myftp.msgToServer);
-            System.out.println( recSkt.readLine() );
-
+            if ( "".equalsIgnoreCase(myftp.msgToServer)) {
+                System.out.println("Invalid command.");
+            } else {
+                sendSkt.println(myftp.msgToServer);
+                System.out.println(recSkt.readLine());
+            }
         } while (myftp.openPort);
 
         myftp.close();
@@ -65,7 +68,7 @@ public class Myftp {
         String cmd = "";
         String path = "";
         // split and assign input to cmd and path
-        input.trim();
+        input = input.trim();
         if (input.contains(" ")) {
             String[] inputSplited = input.split(" ");
             cmd = inputSplited[0].toLowerCase();
@@ -91,7 +94,7 @@ public class Myftp {
                 cmdLs(path);
                 break;
             case "cd":
-                cmdCd();
+                if ("".equalsIgnoreCase(path)) {tryagain();} else {cmdCd(path);}
                 break;
             case "mkdir":
                 cmdMkdir(path);
@@ -133,9 +136,9 @@ public class Myftp {
         msgToServer = "pwd";
     }
 
-    // cmd cd
-    private void cmdCd() {
-
+    // cmd cd path
+    private void cmdCd(String path) {
+        msgToServer = "cd"+" "+path;
     }
 
     // cmd mkdir
@@ -147,6 +150,11 @@ public class Myftp {
     private void cmdQuit() throws IOException {
         openPort = false;
         msgToServer = "quit";
+    }
+
+    // try again
+    private void tryagain() {
+        msgToServer = "";
     }
 
     private void welcomeBanner() {
