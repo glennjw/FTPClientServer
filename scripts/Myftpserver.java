@@ -2,6 +2,7 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.io.File;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.util.List;
@@ -60,13 +61,21 @@ class Ftpserver {         // for each client
             System.out.println("Connection failed.");
         }
 
+        BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(acceptedSkt.getInputStream()));
+        PrintWriter msgToClient = new PrintWriter(acceptedSkt.getOutputStream(), true);
         // execute cmd
         do {
-            BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(acceptedSkt.getInputStream()));
-            PrintWriter msgToClient = new PrintWriter(acceptedSkt.getOutputStream(), true);
+            System.out.println("beginning...");
+
+            System.out.println("b4 wait input");
             String recMsg = msgFromClient.readLine();     // received msg
+            System.out.println("b4 handle cmd"+recMsg);
             cmdInterface(recMsg);
+            System.out.println("after handle cmd");
+            System.out.println("response is: "+response);
             msgToClient.println( response );
+            System.out.println("after sent response");
+            //msgToClient.flush();
             if ( true == ifQuit ) {
                 msgFromClient.close();
                 msgToClient.close();
@@ -83,10 +92,10 @@ class Ftpserver {         // for each client
         String cmd = "";
         String path = "";
         // split and assign input to cmd and path
-        input = input.trim().toLowerCase();
+        input = input.trim();
         if (-1 < input.indexOf(" ")) {
             String[] inputSplited = input.split(" ");
-            cmd = inputSplited[0];
+            cmd = inputSplited[0].toLowerCase();
             path = inputSplited[1];
         } else {
             cmd = input;
@@ -117,7 +126,7 @@ class Ftpserver {         // for each client
             case "pwd":                  // done
                 cmdPwd();
                 break;
-            case "quit":
+            case "quit":                 // done
                 cmdQuit();
                 break;
         }
@@ -147,11 +156,13 @@ class Ftpserver {         // for each client
 
     private void cmdMkdir(String path) {
         //mkdir path
+        File newDir = new File(cur_path+"/"+path);
+        if (newDir.exists()) { response = "Already exists."; } else { newDir.mkdir(); response="";}
     }
 
     private void cmdPwd() throws IOException {
         //pwd path
-        response = cur_path;
+        response = cur_path + "/";
     }
 
     private void cmdQuit() throws IOException {
