@@ -80,7 +80,8 @@ public class Myftp {
         // check cmd
         switch (cmd) {
             default:
-                System.out.println("Command not found! Try again...");
+                otherCmd(cmd);
+                break;
             case "get":
                 cmdGet();
                 break;
@@ -88,7 +89,7 @@ public class Myftp {
                 cmdPut();
                 break;
             case "delete":
-                cmdDelete();
+                cmdDelete(path);
                 break;
             case "ls":
                 cmdLs(path);
@@ -109,7 +110,10 @@ public class Myftp {
 
     }
 
-
+    // other cmd
+    private void otherCmd(String cmd) {
+        msgToServer = cmd;
+    }
     // cmd ls
     private void cmdLs(String path) {
         // client ls
@@ -127,8 +131,8 @@ public class Myftp {
     }
 
     // cmd delete
-    private void cmdDelete() {
-
+    private void cmdDelete(String path) {
+        msgToServer = "delete" + path;
     }
 
     // cmd pwd

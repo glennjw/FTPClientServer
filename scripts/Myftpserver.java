@@ -103,7 +103,7 @@ class Ftpserver {         // for each client
         // check cmd
         switch (cmd) {
             default:
-                System.out.println("Command not found! Try again...");
+                cmdNotFound();
                 break;
             case "get":
                 cmdGet(path);
@@ -130,7 +130,6 @@ class Ftpserver {         // for each client
                 cmdQuit();
                 break;
         }
-
     }
 
     private void cmdGet(String file) {
@@ -141,8 +140,17 @@ class Ftpserver {         // for each client
         //put file
     }
 
-    private void cmdDelete(String file) {
+    private void cmdDelete(String path) {
         //delete file
+        File curFile = new File(path);
+        if (curFile.isFile()) {
+            curFile.delete();
+            response = "Deleted.";
+        } else if ( curFile.isDirectory() ) {
+            response = path + " is a directory.";
+        } else {
+            response = "File not found.";
+        }
     }
 
     private void cmdLs(String path) {
@@ -160,22 +168,22 @@ class Ftpserver {         // for each client
 
     private void cmdCd(String path) throws IOException {
         //cd path
-        if (""==path) {
+        if (""==path) {                                  // for cd empty
             response = "Please specify directory.";
             return;
         }
         // remove / from path
         if (path.endsWith("/")) { path = path.substring(0,path.length()-1);}
         File cur_dir = new File(cur_path);
-        if ("..".equalsIgnoreCase(path)) {
+        if ("..".equalsIgnoreCase(path)) {              // for cd ..
             cur_path = cur_dir.getParent() + "/";
             response = cur_path;
-        } else {
+        } else {                                        // for normal cd
             System.out.println("handle normal path... : "+path);
             File dest_dir = new File(path);
             if (dest_dir.exists()) {
-                cur_path = dest_dir.getName();
-                response = dest_dir.getName()+"/";
+                cur_path = dest_dir.getAbsolutePath();
+                response = cur_path+"/";
             } else {
                 response = "Directory not found.";
             }
@@ -198,6 +206,9 @@ class Ftpserver {         // for each client
         response = "Bye!";
     }
 
+    private void cmdNotFound() {
+        response = "Command not found.";
+    }
     public void close() throws IOException {
         skt.close();
     }
