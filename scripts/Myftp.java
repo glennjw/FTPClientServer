@@ -88,7 +88,7 @@ public class Myftp {
                 cmdDelete();
                 break;
             case "ls":
-                cmdLs();
+                cmdLs(path);
                 break;
             case "cd":
                 cmdCd();
@@ -108,9 +108,9 @@ public class Myftp {
 
 
     // cmd ls
-    private void cmdLs() {
+    private void cmdLs(String path) {
         // client ls
-        printlnMsg(System.getProperty("user.dir"));
+        msgToServer = "ls" + " " + path;
     }
 
     // cmd get

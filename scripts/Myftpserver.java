@@ -146,7 +146,20 @@ class Ftpserver {         // for each client
     }
 
     private void cmdLs(String path) {
-        //ls path
+        // check if path empty
+        path = ""==path ? cur_path : path;
+        System.out.println("path is: " + path);
+        // list path
+        String files = "";
+        File curDir = new File(cur_path + "/");
+        File[] curFiles = curDir.listFiles();
+        System.out.println("File list is: " + curFiles.toString());
+        for (File file : curFiles) {
+            System.out.println(file.getName());
+            files += (file.getName() + "\t");
+        }
+        response = files;
+
     }
 
     private void cmdCd(String path) throws IOException {
