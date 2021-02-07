@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 /**
  * This is the ftp client class.
+ *
  * @author
  */
 
@@ -28,8 +29,8 @@ public class Myftp {
         try {
             // connect to server
             myftp.socket = new Socket(myftp.serverName, myftp.serverPort);
-            myftp.sendSkt = new PrintWriter( myftp.socket.getOutputStream(), true);
-            myftp.recSkt = new BufferedReader( new InputStreamReader( myftp.socket.getInputStream() ) );
+            myftp.sendSkt = new PrintWriter(myftp.socket.getOutputStream(), true);
+            myftp.recSkt = new BufferedReader(new InputStreamReader(myftp.socket.getInputStream()));
             //myftp.recSkt = new DataInputStream( new BufferedInputStream(myftp.socket.getInputStream()));
             //myftp.sendSkt = new DataOutputStream( myftp.socket.getOutputStream() );
 
@@ -49,11 +50,12 @@ public class Myftp {
             // input cmd
             myftp.printMsg("myftp> ");
             String cmd = cmdRec.nextLine().trim().toLowerCase();
+
             // execute cmd
-            myftp.cmdInterface( cmd );
+            myftp.cmdInterface(cmd);
             // cleanup
 
-        } while ( myftp.openPort );
+        } while (myftp.openPort);
 
         //myftp.close();
 
@@ -66,7 +68,7 @@ public class Myftp {
         String path = "";
         // split and assign input to cmd and path
         input.trim();
-        if ( input.contains(" ") ) {
+        if (input.contains(" ")) {
             String[] inputSplited = input.split(" ");
             cmd = inputSplited[0];
             path = inputSplited[1];
@@ -80,20 +82,28 @@ public class Myftp {
                 System.out.println("Command not found! Try again...");
             case "get":
                 cmdGet();
+                break;
             case "put":
                 cmdPut();
+                break;
             case "delete":
                 cmdDelete();
+                break;
             case "ls":
                 cmdLs();
+                break;
             case "cd":
                 cmdCd();
+                break;
             case "mkdir":
                 cmdMkdir();
+                break;
             case "pwd":
                 cmdPwd();
+                break;
             case "quit":
                 cmdQuit();
+                break;
         }
 
     }
@@ -122,8 +132,8 @@ public class Myftp {
 
     // cmd pwd
     private void cmdPwd() throws IOException {
-        sendSkt.println("pwd");
-        System.out.println( recSkt.readLine() );
+        sendSkt.println("pwd jkl");
+        System.out.println(recSkt.readLine());
     }
 
     // cmd cd
@@ -140,20 +150,21 @@ public class Myftp {
     private void cmdQuit() throws IOException {
         openPort = false;
         sendSkt.println("quit");
-        System.out.println( this.recSkt.readLine() );
+        System.out.println(this.recSkt.readLine());
         close();
     }
 
     private void welcomeBanner() {
         printlnMsg("\t******************************************\n" +
-                 "\t*****          FTP Client           ******\n" +
-                 "\t******************************************\n" +
-                 "\tSupported commands: pwd, ls, get, put, delete, cd, mkdir, quit\n");
+                "\t*****          FTP Client           ******\n" +
+                "\t******************************************\n" +
+                "\tSupported commands: pwd, ls, get, put, delete, cd, mkdir, quit\n");
     }
 
     private void printlnMsg(String msg) {
         System.out.println(msg);
     }
+
     private void printMsg(String msg) {
         System.out.print(msg);
     }
@@ -177,9 +188,9 @@ public class Myftp {
             Integer inputServerPort = inputs.nextInt();
             // check input legality
             ifAgain = (0 < inputServerPort &&
-                       65353 > inputServerPort &&
-                       !inputServerName.isEmpty()
-                      ) ? false : true;
+                    65353 > inputServerPort &&
+                    !inputServerName.isEmpty()
+            ) ? false : true;
 
             // global values
             if (!ifAgain) {
@@ -188,7 +199,7 @@ public class Myftp {
             } else {
                 printlnMsg("Illegal input! Try again");
             }
-        } while ( ifAgain );
+        } while (ifAgain);
 
     }
 
