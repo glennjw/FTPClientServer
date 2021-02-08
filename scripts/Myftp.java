@@ -1,5 +1,6 @@
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -15,7 +16,8 @@ public class Myftp {
     private String serverName;
     private Integer serverPort;
     private Socket socket;
-    String msgToServer;
+    private String msgToServer;
+    private int fileSign;                // 0:no file; 1:send file; 2:rec file;
     //private PrintWriter sendSkt;
     //private BufferedReader recSkt;
     //private DataOutputStream sendSkt;
@@ -51,11 +53,21 @@ public class Myftp {
             // execute cmd
             myftp.cmdInterface(input);
             if ( "".equalsIgnoreCase(myftp.msgToServer)) {
-                System.out.println("Invalid command.");
+                System.out.println("Invalid command or path.");
             } else {
                 sendSkt.println(myftp.msgToServer);
                 System.out.println(recSkt.readLine());
             }
+            if (0==myftp.fileSign) {             // no file
+
+            } else if (1==myftp.fileSign) {      // send file
+                // maybe need to suspend sendSkt/recSkt.
+                myftp.sendFile(myftp.msgToServer);
+            } else if (2==myftp.fileSign) {      // rec file
+                // maybe need to suspend sendSkt/recSkt.
+                myftp.recFile(myftp.msgToServer);
+            }
+
         } while (myftp.openPort);
 
         myftp.close();
@@ -83,22 +95,22 @@ public class Myftp {
                 otherCmd(cmd);
                 break;
             case "get":
-                cmdGet();
+                cmdGet(path);
                 break;
             case "put":
-                cmdPut();
+                cmdPut(path);
                 break;
             case "delete":
-                cmdDelete(path);
+                if ("".equalsIgnoreCase(path)) {emptyPath();} else {cmdDelete(path);}
                 break;
             case "ls":
                 cmdLs(path);
                 break;
             case "cd":
-                if ("".equalsIgnoreCase(path)) {tryagain();} else {cmdCd(path);}
+                if ("".equalsIgnoreCase(path)) {emptyPath();} else {cmdCd(path);}
                 break;
             case "mkdir":
-                cmdMkdir(path);
+                if ("".equalsIgnoreCase(path)) {emptyPath();} else {cmdMkdir(path);}
                 break;
             case "pwd":
                 cmdPwd();
@@ -121,18 +133,30 @@ public class Myftp {
     }
 
     // cmd get
-    private void cmdGet() {
+    private void cmdGet(String cmd) throws IOException {
+        File targetFile = new File(cmd.split(" ")[1]);
+        if ( !targetFile.exists() ) { emptyPath(); return;}
 
+        BufferedInputStream  fileIn = new BufferedInputStream(new FileInputStream(targetFile));
+        PrintStream fileOut = new PrintStream(socket.getOutputStream(),true);
+        byte[] fileBuffer = new byte[1024*4];
+        int fileSeg = 0;
+        while((fileSeg=fileIn.read(fileBuffer,0,1024))!=-1)
+        {
+            fileOut.write(fileBuffer,0,fileSeg);
+        }
+        fileIn.close();
+        fileOut.close();
     }
 
     // cmd put
-    private void cmdPut() {
+    private void cmdPut(String cmd) throws IOException {
 
     }
 
     // cmd delete
     private void cmdDelete(String path) {
-        msgToServer = "delete" + path;
+        msgToServer = "delete" + " " + path;
     }
 
     // cmd pwd
@@ -157,7 +181,7 @@ public class Myftp {
     }
 
     // try again
-    private void tryagain() {
+    private void emptyPath() {
         msgToServer = "";
     }
 
@@ -182,6 +206,14 @@ public class Myftp {
 
     private void setServerPort(Integer port) {
         this.serverPort = port;
+    }
+
+    private void sendFile(String cmdMsg) {    //send file
+
+    }
+
+    private void recFile(String cmdMsg) {     //rec file
+
     }
 
     private void inputServerInfo() {

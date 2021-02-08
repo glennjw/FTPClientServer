@@ -1,5 +1,6 @@
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.File;
@@ -38,31 +39,33 @@ public class Myftpserver {
  */
 class Ftpserver {         // for each client
     final int serverPort = 2121;
-    ServerSocket skt = new ServerSocket(serverPort);
+    ServerSocket serverSkt;
+    Socket skt;
     String response;
     String cur_path = System.getProperty("user.dir");
     boolean ifQuit = false;
+    int transFile = 0;
 
     Ftpserver() throws IOException {
     }
 
     public void run() throws IOException {
-        Socket acceptedSkt = new Socket();    // init skt
-
+        //skt = new Socket();    // init skt
+        serverSkt = new ServerSocket(serverPort);
         // try connect
         try {
-            acceptedSkt = skt.accept();
-            //msgFromClient = new BufferedReader(new InputStreamReader(acceptedSkt.getInputStream()));
-            //msgToClient = new PrintWriter(acceptedSkt.getOutputStream(), true);
-            //msgFromClient = new DataInputStream(new BufferedInputStream(acceptedSkt.getInputStream()));
-            //msgToClient = new DataOutputStream(acceptedSkt.getOutputStream());
+            skt = serverSkt.accept();
+            //msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
+            //msgToClient = new PrintWriter(skt.getOutputStream(), true);
+            //msgFromClient = new DataInputStream(new BufferedInputStream(skt.getInputStream()));
+            //msgToClient = new DataOutputStream(skt.getOutputStream());
             System.out.println("New client connected.");
         } catch (IOException exc) {
             System.out.println("Connection failed.");
         }
 
-        BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(acceptedSkt.getInputStream()));
-        PrintWriter msgToClient = new PrintWriter(acceptedSkt.getOutputStream(), true);
+        BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
+        PrintWriter msgToClient = new PrintWriter(skt.getOutputStream(), true);
         // execute cmd
         do {
             System.out.println("beginning...");
@@ -75,15 +78,22 @@ class Ftpserver {         // for each client
             System.out.println("response is: "+response);
             msgToClient.println( response );
             System.out.println("after sent response");
-            //msgToClient.flush();
+            // if file
+            if (0==transFile) { }
+            else if (1==transFile) {
+                sendFile(recMsg);
+            } else if (2==transFile) {
+                recFile(recMsg);
+            }
+            // if end session
             if ( true == ifQuit ) {
                 msgFromClient.close();
                 msgToClient.close();
-                acceptedSkt.close();
+                skt.close();
             }
         } while (!ifQuit);          // set to false for 1 time test purpose
 
-        //acceptedSkt.close();
+        //skt.close();
         //msgFromClient.close();
     }
 
@@ -172,8 +182,11 @@ class Ftpserver {         // for each client
             response = "Please specify directory.";
             return;
         }
-        // remove / from path
-        if (path.endsWith("/")) { path = path.substring(0,path.length()-1);}
+        // add start /
+        if (!path.startsWith("/") && !"..".equalsIgnoreCase(path) ) { path = cur_path + "/" + path;}
+        // remove end /
+        else if ( path.endsWith("/")) { path = path.substring(0,path.length()-1); }
+        // handle full path
         File cur_dir = new File(cur_path);
         if ("..".equalsIgnoreCase(path)) {              // for cd ..
             cur_path = cur_dir.getParent() + "/";
@@ -209,11 +222,27 @@ class Ftpserver {         // for each client
     private void cmdNotFound() {
         response = "Command not found.";
     }
+
     public void close() throws IOException {
         skt.close();
     }
 
+    private  void sendFile(String cmd) throws IOException {
+        BufferedOutputStream fout = new BufferedOutputStream(new FileOutputStream(cmd.split(" ")[1]));
+        BufferedInputStream din = new BufferedInputStream(skt.getInputStream());
+        byte[] buf = new byte[1024];
+        int l = 0;
+        while((l = din.read(buf,0,1024))!=-1)
+        {
+            fout.write(buf,0,l);
+        }//while()
+        din.close();
+        fout.close();
+    }
 
+    private void recFile(String cmd) {
+
+    }
 }
 
 
