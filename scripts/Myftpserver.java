@@ -74,23 +74,16 @@ class Ftpserver {         // for each client
 
             // execute cmd
             do {
-                System.out.println("about to read input msg; ");
                 String recMsg = msgFromClient.readUTF();
-                System.out.println("rec msg is: " + recMsg);
                 cmdInterface(recMsg, msgFromClient, msgToClient);
                 msgToClient.writeUTF(response);
-                System.out.println("after sent response: " + response);
 
                 if (0 == transFile) {             // 0:no file
                 } else if (1 == transFile) {      // send file
-                    System.out.println("this is fileSign=1");
-                    // maybe need to suspend sendSkt/recSkt.
                     sendFile(recMsg, msgToClient);
                 } else if (2 == transFile) {      // rec file
-                    // ? maybe need to suspend sendSkt/recSkt.
                     recFile(recMsg, msgFromClient);
                 }
-                System.out.println("reset transFile");
                 transFile = 0;
 
 
@@ -161,7 +154,7 @@ class Ftpserver {         // for each client
 
     private void cmdPut(String file, DataInputStream msgFromClient) throws IOException {
         transFile = 2;              // rec file from client
-        response = "Transfer file...";
+        response = "";
     }
 
     private void cmdDelete(String path) {
@@ -204,9 +197,8 @@ class Ftpserver {         // for each client
         File cur_dir = new File(cur_path);
         if ("..".equalsIgnoreCase(path)) {              // for cd ..
             cur_path = cur_dir.getParent();
-            response = cur_path;
+            response = cur_path+"/";
         } else {                                        // for normal cd
-            System.out.println("handle normal path... : "+path);
             File dest_dir = new File(path);
             if (dest_dir.exists()) {
                 cur_path = dest_dir.getAbsolutePath();
@@ -237,74 +229,42 @@ class Ftpserver {         // for each client
         response = "Command not found.";
     }
 
+    private void fileNotFound() {
+        response = "File not found.";
+    }
+
     public void close() throws IOException {
         skt.close();
     }
 
     private void sendFile(String path, DataOutputStream dataOut) throws IOException {    //send file
-        /*
-        File targetFile = new File(cur_path+"/"+path);
-        if ( !targetFile.exists() ) { response="File not found!"; return;}
-
-        FileInputStream fileIn = new FileInputStream(targetFile);
-
-        msgToClient.writeLong(targetFile.length());
-        byte[] fileBuffer = new byte[1024*4];
-        int fileSeg = 0;
-        while((fileSeg=fileIn.read(fileBuffer,0,1024))!=-1) {      // start sending
-            msgToClient.write(fileBuffer,0,fileSeg);
-            msgToClient.flush();
+        File targetFile = new File(cur_path + "/" + path.split(" ")[1]);
+        if ( !targetFile.exists() ) { fileNotFound(); return;}            // if file exists
+        int segFile = 0;
+        FileInputStream fileInputStream = new FileInputStream(targetFile);
+        dataOut.writeLong(targetFile.length());    // send file size
+        byte[] fileBuf = new byte[4*1024];         // break file into chunks
+        while ((segFile=fileInputStream.read(fileBuf))!=-1){
+            dataOut.write(fileBuf,0,segFile);
+            dataOut.flush();
         }
-        fileIn.close();
-
-         */
-
-        File myFile = new File(cur_path + "/" + path.split(" ")[1]);
-
-        byte[] mybytearray = new byte[(int) myFile.length()];
-        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(myFile));
-        bis.read(mybytearray, 0, mybytearray.length);
-        dataOut.flush();
-        dataOut.write(mybytearray, 0, mybytearray.length);
-        dataOut.flush();
-        bis.close();
+        fileInputStream.close();
 
     }
 
     private void recFile(String path, DataInputStream dataIn) throws IOException {
-        /*
-        File tempFile = new File(cur_path+"/"+".temp");    // create file
-        //if ( targetFile.exists() ) { System.out.println("File name conflict!"); return;
-        OutputStream fileOut = new FileOutputStream(targetFile);
-        long fileSize = dataIn.readLong();
-        byte[] fileBuffer = new byte[1024];
-        int fileSeg = 0;
-        System.out.println("the file size is: " + fileSize);
-        //while( (fileSeg=dataIn.read(fileBuffer, 0, 1024)) >= 1024)
-        while (fileSize > 0 && (fileSeg = dataIn.read(fileBuffer, 0, (int)Math.min(fileBuffer.length, fileSize))) !=-1) {
-            System.out.println("byte transferring fileSeg: "+ fileSeg);
-            fileOut.write(fileBuffer,0,fileSeg);
-            fileSize -= fileSeg;
-            System.out.println("left file size: " + fileSize);
+        File targetFile = new File(cur_path+"/"+path.split(" ")[1]);    // create file
+        FileOutputStream fileOut = new FileOutputStream(targetFile);
+        int fileLeft = 0;
+        long fileSize = dataIn.readLong();     // read file size
+        byte[] fileBuf = new byte[4*1024];
+        while (fileSize > 0 && (fileLeft = dataIn.read(fileBuf, 0, (int)Math.min(fileBuf.length, fileSize))) != -1) {
+            fileOut.write(fileBuf,0,fileLeft);
+            fileSize -= fileLeft;      // read upto file size
         }
-        System.out.println("receiving finished");
         fileOut.close();
-        File finalFile = new File( cur_path+"/"+path.split(" ")[1] );
-        if ( !tempFile.renameTo(finalFile) ) { System.out.println("File name duplicated.");}
-        else { tempFile.delete(); }
-        //File fileWithNewName = new File(targetFile.getParent(), cur_path+"/"+path.split(" ")[1]);    // rename file
-        */
 
-        File recFile = new File(cur_path+"/"+path.split(" ")[1]);    // create file
-        byte[] mybytearray = new byte[ Integer.parseInt(path.split(" ")[2]) ];
-        FileOutputStream fos = new FileOutputStream(recFile);
-        BufferedOutputStream bos = new BufferedOutputStream(fos);
-        int bytesRead = dataIn.read(mybytearray, 0, mybytearray.length);
-        bos.write(mybytearray, 0, bytesRead);
-        bos.close();
-
-
-    }    // inconsistent inside.txt
+    }
 
 }
 
