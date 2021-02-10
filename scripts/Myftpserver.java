@@ -64,33 +64,42 @@ class Ftpserver {         // for each client
             System.out.println("Connection failed.");
         }
 
-        BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-        PrintWriter msgToClient = new PrintWriter(skt.getOutputStream(), true);
+        //BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
+        //PrintWriter msgToClient = new PrintWriter(skt.getOutputStream(), true);
+
+        DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
+        DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
+
         // execute cmd
         do {
-            System.out.println("beginning...");
+            System.out.println("about to read input msg; ");
+            String recMsg = msgFromClient.readUTF();
+            System.out.println("rec msg is: "+recMsg);
+            cmdInterface(recMsg, msgFromClient, msgToClient);
+            msgToClient.writeUTF( response );
+            System.out.println("after sent response: " + response );
 
-            System.out.println("b4 wait input");
-            String recMsg = msgFromClient.readLine();     // received msg
-            System.out.println("b4 handle cmd"+recMsg);
-            cmdInterface(recMsg);
-            System.out.println("after handle cmd");
-            System.out.println("response is: "+response);
-            msgToClient.println( response );
-            System.out.println("after sent response");
-            // if file
-            if (0==transFile) { }
-            else if (1==transFile) {
-                sendFile(recMsg);
-            } else if (2==transFile) {
-                recFile(recMsg);
+            if (0==transFile) {             // 0:no file
+            } else if (1==transFile) {      // send file
+                System.out.println("this is fileSign=1");
+                // maybe need to suspend sendSkt/recSkt.
+                sendFile(recMsg, msgToClient);
+            } else if (2==transFile) {      // rec file
+                // ? maybe need to suspend sendSkt/recSkt.
+                recFile(recMsg, msgFromClient);
             }
+            System.out.println("reset transFile");
+            transFile = 0;
+
+
             // if end session
             if ( true == ifQuit ) {
                 msgFromClient.close();
                 msgToClient.close();
                 skt.close();
             }
+            response = "";           // reset response
+
         } while (!ifQuit);          // set to false for 1 time test purpose
 
         //skt.close();
@@ -98,7 +107,7 @@ class Ftpserver {         // for each client
     }
 
     // all supported cmd
-    private void cmdInterface(String input) throws IOException {
+    private void cmdInterface(String input, DataInputStream msgFromClient, DataOutputStream msgToClient) throws IOException {
         String cmd = "";
         String path = "";
         // split and assign input to cmd and path
@@ -116,10 +125,10 @@ class Ftpserver {         // for each client
                 cmdNotFound();
                 break;
             case "get":
-                cmdGet(path);
+                cmdGet(path, msgToClient);
                 break;
             case "put":
-                cmdPut(path);
+                cmdPut(path, msgFromClient);
                 break;
             case "delete":
                 cmdDelete(path);
@@ -142,12 +151,15 @@ class Ftpserver {         // for each client
         }
     }
 
-    private void cmdGet(String file) {
-        //get file
+    private void cmdGet(String path, DataOutputStream msgToClient) throws IOException {
+        File myFile = new File(cur_path + "/" + path);
+        if (myFile.exists()) { response = path + " " + myFile.length(); transFile = 1; }
+        else { response = "File not found."; }
     }
 
-    private void cmdPut(String file) {
-        //put file
+    private void cmdPut(String file, DataInputStream msgFromClient) throws IOException {
+        transFile = 2;              // rec file from client
+        response = "Transfer file...";
     }
 
     private void cmdDelete(String path) {
@@ -189,7 +201,7 @@ class Ftpserver {         // for each client
         // handle full path
         File cur_dir = new File(cur_path);
         if ("..".equalsIgnoreCase(path)) {              // for cd ..
-            cur_path = cur_dir.getParent() + "/";
+            cur_path = cur_dir.getParent();
             response = cur_path;
         } else {                                        // for normal cd
             System.out.println("handle normal path... : "+path);
@@ -227,22 +239,71 @@ class Ftpserver {         // for each client
         skt.close();
     }
 
-    private  void sendFile(String cmd) throws IOException {
-        BufferedOutputStream fout = new BufferedOutputStream(new FileOutputStream(cmd.split(" ")[1]));
-        BufferedInputStream din = new BufferedInputStream(skt.getInputStream());
-        byte[] buf = new byte[1024];
-        int l = 0;
-        while((l = din.read(buf,0,1024))!=-1)
-        {
-            fout.write(buf,0,l);
-        }//while()
-        din.close();
-        fout.close();
+    private void sendFile(String path, DataOutputStream dataOut) throws IOException {    //send file
+        /*
+        File targetFile = new File(cur_path+"/"+path);
+        if ( !targetFile.exists() ) { response="File not found!"; return;}
+
+        FileInputStream fileIn = new FileInputStream(targetFile);
+
+        msgToClient.writeLong(targetFile.length());
+        byte[] fileBuffer = new byte[1024*4];
+        int fileSeg = 0;
+        while((fileSeg=fileIn.read(fileBuffer,0,1024))!=-1) {      // start sending
+            msgToClient.write(fileBuffer,0,fileSeg);
+            msgToClient.flush();
+        }
+        fileIn.close();
+
+         */
+
+        File myFile = new File(cur_path + "/" + path.split(" ")[1]);
+
+        byte[] mybytearray = new byte[(int) myFile.length()];
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(myFile));
+        bis.read(mybytearray, 0, mybytearray.length);
+        dataOut.flush();
+        dataOut.write(mybytearray, 0, mybytearray.length);
+        dataOut.flush();
+        bis.close();
+
     }
 
-    private void recFile(String cmd) {
+    private void recFile(String path, DataInputStream dataIn) throws IOException {
+        /*
+        File tempFile = new File(cur_path+"/"+".temp");    // create file
+        //if ( targetFile.exists() ) { System.out.println("File name conflict!"); return;
+        OutputStream fileOut = new FileOutputStream(targetFile);
+        long fileSize = dataIn.readLong();
+        byte[] fileBuffer = new byte[1024];
+        int fileSeg = 0;
+        System.out.println("the file size is: " + fileSize);
+        //while( (fileSeg=dataIn.read(fileBuffer, 0, 1024)) >= 1024)
+        while (fileSize > 0 && (fileSeg = dataIn.read(fileBuffer, 0, (int)Math.min(fileBuffer.length, fileSize))) !=-1) {
+            System.out.println("byte transferring fileSeg: "+ fileSeg);
+            fileOut.write(fileBuffer,0,fileSeg);
+            fileSize -= fileSeg;
+            System.out.println("left file size: " + fileSize);
+        }
+        System.out.println("receiving finished");
+        fileOut.close();
+        File finalFile = new File( cur_path+"/"+path.split(" ")[1] );
+        if ( !tempFile.renameTo(finalFile) ) { System.out.println("File name duplicated.");}
+        else { tempFile.delete(); }
+        //File fileWithNewName = new File(targetFile.getParent(), cur_path+"/"+path.split(" ")[1]);    // rename file
+        */
 
-    }
+        File recFile = new File(cur_path+"/"+path.split(" ")[1]);    // create file
+        byte[] mybytearray = new byte[ Integer.parseInt(path.split(" ")[2]) ];
+        FileOutputStream fos = new FileOutputStream(recFile);
+        BufferedOutputStream bos = new BufferedOutputStream(fos);
+        int bytesRead = dataIn.read(mybytearray, 0, mybytearray.length);
+        bos.write(mybytearray, 0, bytesRead);
+        bos.close();
+
+
+    }    // inconsistent inside.txt
+
 }
 
 
