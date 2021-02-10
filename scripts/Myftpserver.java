@@ -52,58 +52,60 @@ class Ftpserver {         // for each client
     public void run() throws IOException {
         //skt = new Socket();    // init skt
         serverSkt = new ServerSocket(serverPort);
-        // try connect
-        try {
-            skt = serverSkt.accept();
-            //msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-            //msgToClient = new PrintWriter(skt.getOutputStream(), true);
-            //msgFromClient = new DataInputStream(new BufferedInputStream(skt.getInputStream()));
-            //msgToClient = new DataOutputStream(skt.getOutputStream());
-            System.out.println("New client connected.");
-        } catch (IOException exc) {
-            System.out.println("Connection failed.");
-        }
 
-        //BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-        //PrintWriter msgToClient = new PrintWriter(skt.getOutputStream(), true);
-
-        DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
-        DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
-
-        // execute cmd
         do {
-            System.out.println("about to read input msg; ");
-            String recMsg = msgFromClient.readUTF();
-            System.out.println("rec msg is: "+recMsg);
-            cmdInterface(recMsg, msgFromClient, msgToClient);
-            msgToClient.writeUTF( response );
-            System.out.println("after sent response: " + response );
-
-            if (0==transFile) {             // 0:no file
-            } else if (1==transFile) {      // send file
-                System.out.println("this is fileSign=1");
-                // maybe need to suspend sendSkt/recSkt.
-                sendFile(recMsg, msgToClient);
-            } else if (2==transFile) {      // rec file
-                // ? maybe need to suspend sendSkt/recSkt.
-                recFile(recMsg, msgFromClient);
+            // try connect
+            try {
+                skt = serverSkt.accept();
+                //msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
+                //msgToClient = new PrintWriter(skt.getOutputStream(), true);
+                //msgFromClient = new DataInputStream(new BufferedInputStream(skt.getInputStream()));
+                //msgToClient = new DataOutputStream(skt.getOutputStream());
+                System.out.println("New client connected.");
+            } catch (IOException exc) {
+                System.out.println("Connection failed.");
             }
-            System.out.println("reset transFile");
-            transFile = 0;
+
+            //BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
+            //PrintWriter msgToClient = new PrintWriter(skt.getOutputStream(), true);
+
+            DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
+            DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
+
+            // execute cmd
+            do {
+                System.out.println("about to read input msg; ");
+                String recMsg = msgFromClient.readUTF();
+                System.out.println("rec msg is: " + recMsg);
+                cmdInterface(recMsg, msgFromClient, msgToClient);
+                msgToClient.writeUTF(response);
+                System.out.println("after sent response: " + response);
+
+                if (0 == transFile) {             // 0:no file
+                } else if (1 == transFile) {      // send file
+                    System.out.println("this is fileSign=1");
+                    // maybe need to suspend sendSkt/recSkt.
+                    sendFile(recMsg, msgToClient);
+                } else if (2 == transFile) {      // rec file
+                    // ? maybe need to suspend sendSkt/recSkt.
+                    recFile(recMsg, msgFromClient);
+                }
+                System.out.println("reset transFile");
+                transFile = 0;
 
 
-            // if end session
-            if ( true == ifQuit ) {
-                msgFromClient.close();
-                msgToClient.close();
-                skt.close();
-            }
-            response = "";           // reset response
+                // if end session
+                if (true == ifQuit) {
+                    msgFromClient.close();
+                    msgToClient.close();
+                    skt.close();
+                }
+                response = "";           // reset response
 
-        } while (!ifQuit);          // set to false for 1 time test purpose
+            } while (!ifQuit);          // each client
+            ifQuit = false;             // reset quit
+        } while (true);                 // keep server up
 
-        //skt.close();
-        //msgFromClient.close();
     }
 
     // all supported cmd
@@ -164,7 +166,7 @@ class Ftpserver {         // for each client
 
     private void cmdDelete(String path) {
         //delete file
-        File curFile = new File(path);
+        File curFile = new File(cur_path+"/"+path);
         if (curFile.isFile()) {
             curFile.delete();
             response = "Deleted.";
@@ -227,7 +229,7 @@ class Ftpserver {         // for each client
     }
 
     private void cmdQuit() throws IOException {
-        ifQuit = true;
+        ifQuit = true;     // keep sever alive
         response = "Bye!";
     }
 
