@@ -1,40 +1,20 @@
-Distributed Computing System
+Project1:
 
+a. Grout members:
+       Ting Jiang
+       Jianwei Hao
 
+b. How-to-run:
+        1. Upload Myftpserver.java to the server computer. Compile and run: 
+           $ javac Myftpserver.java
+           $ java Myftpserver
 
-Project 1: FTP Client Server
+        2. Upload Myftp.java to the client computer. Compile and run: 
+           $ javac Myftp.java 
+           $ java Myftp
 
-        Status: 
-
-            pwd/quit/ls/cd/mkdir done.
-
-        How-to-run:
-
-            1. Open a terminal and go to scripts:
- 
-               $ javac Myftpserver.java 
-
-               $ java Myftpserver   
-
-            2. Open another terminal and go to scripts:
-
- 
-               $ javac Myftp.java 
-
-               $ java Myftp   
-
-           3. Input command in the 2 terminal. For example:
-
-               $ ls
-               $ pwd  
-
-
-
-
-
-
-
-                  
-
-
+        3. On the client side, input the server address or domain name. The port is 2121. 
+           
+        
+c. “This project was done in its entirety by Ting Jiang and Jianwei Hao. We hereby state that we have not received unauthorized help of any form."
 
