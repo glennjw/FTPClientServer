@@ -5,6 +5,7 @@ a. Grout members:
        Jianwei Hao
 
 b. How-to-run:
+
         1. Upload Myftpserver.java to the server computer. Compile and run: 
            $ javac Myftpserver.java
            $ java Myftpserver
