@@ -7,6 +7,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Scanner;
 
 
 /**
@@ -16,9 +17,15 @@ public class Myftpserver {
 
 
     public static void main(String[] args) throws IOException {
+
         Ftpserver ftpserver = new Ftpserver();
+        Scanner cmdRec = new Scanner(System.in);
+        System.out.print("nport: ");
+        ftpserver.serverPort = cmdRec.nextInt();
+        System.out.print("tport: ");
+        ftpserver.terminatePort = cmdRec.nextInt();
         printBanner();
-        System.out.println("FTP port: 2121");
+        System.out.println("nport: "+ String.valueOf(ftpserver.serverPort) + "\n" + "tport: " + String.valueOf(ftpserver.terminatePort));
         ftpserver.run();
         //ftpserver.close();
 
@@ -38,7 +45,8 @@ public class Myftpserver {
  * This is the server class.
  */
 class Ftpserver {         // for each client
-    final int serverPort = 2121;
+    int serverPort;
+    int terminatePort;
     ServerSocket serverSkt;
     Socket skt;
     String response;
@@ -57,46 +65,46 @@ class Ftpserver {         // for each client
             // try connect
             try {
                 skt = serverSkt.accept();
-                //msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-                //msgToClient = new PrintWriter(skt.getOutputStream(), true);
-                //msgFromClient = new DataInputStream(new BufferedInputStream(skt.getInputStream()));
-                //msgToClient = new DataOutputStream(skt.getOutputStream());
                 System.out.println("New client connected.");
             } catch (IOException exc) {
                 System.out.println("Connection failed.");
+                System.exit(1);
             }
 
-            //BufferedReader msgFromClient = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-            //PrintWriter msgToClient = new PrintWriter(skt.getOutputStream(), true);
+            try {
+                DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
+                DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
 
-            DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
-            DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
+                // execute cmd
+                do {
+                    String recMsg = msgFromClient.readUTF();
+                    cmdInterface(recMsg, msgFromClient, msgToClient);
+                    msgToClient.writeUTF(response);
 
-            // execute cmd
-            do {
-                String recMsg = msgFromClient.readUTF();
-                cmdInterface(recMsg, msgFromClient, msgToClient);
-                msgToClient.writeUTF(response);
-
-                if (0 == transFile) {             // 0:no file
-                } else if (1 == transFile) {      // send file
-                    sendFile(recMsg, msgToClient);
-                } else if (2 == transFile) {      // rec file
-                    recFile(recMsg, msgFromClient);
-                }
-                transFile = 0;
+                    if (0 == transFile) {             // 0:no file
+                    } else if (1 == transFile) {      // send file
+                        sendFile(recMsg, msgToClient);
+                    } else if (2 == transFile) {      // rec file
+                        recFile(recMsg, msgFromClient);
+                    }
+                    transFile = 0;
 
 
-                // if end session
-                if (true == ifQuit) {
-                    msgFromClient.close();
-                    msgToClient.close();
-                    skt.close();
-                }
-                response = "";           // reset response
+                    // if end session
+                    if (true == ifQuit) {
+                        msgFromClient.close();
+                        msgToClient.close();
+                        skt.close();
+                        cur_path = System.getProperty("user.dir");     // reset initial path
+                    }
+                    response = "";           // reset response
 
-            } while (!ifQuit);          // each client
-            ifQuit = false;             // reset quit
+                } while (!ifQuit);          // each client
+                ifQuit = false;             // reset quit
+            } catch (IOException exc) {
+                System.out.println("Broken pipe");
+            }
+
         } while (true);                 // keep server up
 
     }
@@ -260,7 +268,7 @@ class Ftpserver {         // for each client
         byte[] fileBuf = new byte[4*1024];
         while (fileSize > 0 && (fileLeft = dataIn.read(fileBuf, 0, (int)Math.min(fileBuf.length, fileSize))) != -1) {
             fileOut.write(fileBuf,0,fileLeft);
-            fileSize -= fileLeft;      // read upto file size
+            fileSize -= fileLeft;      // read up to file size
         }
         fileOut.close();
 

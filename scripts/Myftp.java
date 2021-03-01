@@ -10,10 +10,11 @@ import java.util.Scanner;
  * @author
  */
 
-public class Myftp {
+public class Myftp  {
 
     private String serverName;
-    private Integer serverPort;
+    private Integer serverNPort;
+    private Integer serverTPort;
     private Socket socket;
     private String msgToServer;
     private int transFile;                // 0:no file; 1:send file; 2:rec file;
@@ -30,50 +31,95 @@ public class Myftp {
         // connect server
         try {
             // connect to server
-            myftp.socket = new Socket(myftp.serverName, myftp.serverPort);
+            myftp.socket = new Socket(myftp.serverName, myftp.serverNPort);
 
             //myftp.recSkt = new DataInputStream( new BufferedInputStream(myftp.socket.getInputStream()));
             //myftp.sendSkt = new DataOutputStream( myftp.socket.getOutputStream() );
 
         } catch (IOException eIO) {
             myftp.printlnMsg("Connecting failed. Please check config or network.");
+            System.exit(0);
             //eIO.printStackTrace();
         }
-        //PrintWriter sendSkt = new PrintWriter(myftp.socket.getOutputStream(), true);
-        //BufferedReader recSkt = new BufferedReader(new InputStreamReader(myftp.socket.getInputStream()));
 
         DataInputStream recSkt = new DataInputStream(myftp.socket.getInputStream());
         DataOutputStream sendSkt = new DataOutputStream(myftp.socket.getOutputStream());
         // send cmd
         Scanner cmdRec = new Scanner(System.in);
-        String secondMsg = "";
+        String responseMsg = "";
         do {
             // input cmd
             myftp.printMsg("myftp> ");
             String input = cmdRec.nextLine();
 
-            // execute cmd
-            myftp.cmdInterface(input);
-            if ( "".equalsIgnoreCase(myftp.msgToServer)) {
-                System.out.println("Invalid command or path.");
+            // check if background cmd
+            if (input.trim().endsWith("&")) {
+                BgThreadCmd bgCmd = new BgThreadCmd(myftp, input, recSkt, sendSkt);
+                bgCmd.start();
             } else {
-                sendSkt.writeUTF(myftp.msgToServer);
-                System.out.println( secondMsg = recSkt.readUTF());
+                // execute cmd
+                myftp.cmdInterface(input);
+                if ("".equalsIgnoreCase(myftp.msgToServer)) {
+                    //System.out.println("Invalid command or path.");
+                } else {
+                    sendSkt.writeUTF(myftp.msgToServer);
+                    System.out.println(responseMsg = recSkt.readUTF());
+                    myftp.checkSecondMsg(responseMsg);
+                }
+                if (0 == myftp.transFile) {             // 0:no file
+                } else if (1 == myftp.transFile) {      // send file
+                    myftp.sendFile(myftp.msgToServer, sendSkt);
+                } else if (2 == myftp.transFile) {      // rec file
+                    myftp.recFile(responseMsg, recSkt);
+                }
+                myftp.msgToServer = "";     // reset msgToServer
+                myftp.transFile = 0;         // reset fileSign
             }
-            if (0==myftp.transFile) {             // 0:no file
-            } else if (1==myftp.transFile) {      // send file
-                myftp.sendFile(myftp.msgToServer, sendSkt);
-            } else if (2==myftp.transFile) {      // rec file
-                myftp.recFile( secondMsg, recSkt);
-            }
-            myftp.msgToServer = "";     // reset msgToServer
-            myftp.transFile = 0;         // reset fileSign
         } while (myftp.openPort);
 
         myftp.close();
 
     }
 
+    public static class BgThreadCmd extends Thread {
+        private String input;
+        private Myftp myftp;
+        private DataInputStream recSkt;
+        private DataOutputStream sendSkt;
+
+        BgThreadCmd( Myftp myftp, String input, DataInputStream recSkt, DataOutputStream sendSkt ) {
+            this.input = input;
+            this.myftp = myftp;
+            this.recSkt = recSkt;
+            this.sendSkt = sendSkt;
+        }
+
+        public void run() {
+            String responseMsg = "";
+
+            // execute cmd
+            try {
+                myftp.cmdInterface(input);
+                if ("".equalsIgnoreCase(myftp.msgToServer)) {
+                    //System.out.println("Invalid command or path.");
+                } else {
+                    sendSkt.writeUTF(myftp.msgToServer);
+                    responseMsg = recSkt.readUTF();
+                    myftp.checkSecondMsg(responseMsg);
+                }
+                if (0 == myftp.transFile) {             // 0:no file
+                } else if (1 == myftp.transFile) {      // send file
+                    myftp.sendFile(myftp.msgToServer, sendSkt);
+                } else if (2 == myftp.transFile) {      // rec file
+                    myftp.recFile(responseMsg, recSkt);
+                }
+                myftp.msgToServer = "";     // reset msgToServer
+                myftp.transFile = 0;         // reset fileSign
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     // all supported cmd
     private void cmdInterface(String input) throws IOException {
@@ -140,9 +186,8 @@ public class Myftp {
 
     // cmd put
     private void cmdPut(String path) {
-        transFile =1;
         File file = new File(path);
-        if (file.exists()) { msgToServer = "put" + " " + path + " " + file.length(); }
+        if (file.exists()) { msgToServer = "put" + " " + path + " " + file.length(); transFile =1;}
         else { System.out.println("File not found."); }
     }
 
@@ -196,8 +241,12 @@ public class Myftp {
         this.serverName = name;
     }
 
-    private void setServerPort(Integer port) {
-        this.serverPort = port;
+    private void setServerNPort(Integer port) {
+        this.serverNPort = port;
+    }
+
+    private void setServerTPort(Integer port) {
+        this.serverTPort = port;
     }
 
     private void sendFile(String cmdMsg, DataOutputStream dataOut) throws IOException {    //send file
@@ -230,6 +279,10 @@ public class Myftp {
 
     }
 
+    private void checkSecondMsg(String responseMsg) {
+        if ( responseMsg.toLowerCase().contains("not found")) { transFile=0;}   // reset transFile if no this file in server
+    }
+
     private void inputServerInfo() {
         boolean ifAgain;
         // Get server name and port from input
@@ -237,18 +290,21 @@ public class Myftp {
             Scanner inputs = new Scanner(System.in);
             printMsg("Server name: ");
             String inputServerName = inputs.nextLine();
-            printMsg("Server port: ");
-            Integer inputServerPort = inputs.nextInt();
+            printMsg("Server nport: ");
+            Integer inputServerNPort = inputs.nextInt();
+            printMsg("Server tport: ");
+            Integer inputServerTPort = inputs.nextInt();
             // check input legality
-            ifAgain = (0 < inputServerPort &&
-                    65353 > inputServerPort &&
+            ifAgain = (0 < inputServerNPort &&
+                    65353 > inputServerNPort &&
                     !inputServerName.isEmpty()
             ) ? false : true;
 
             // global values
             if (!ifAgain) {
                 this.setServerName(inputServerName);
-                this.setServerPort(inputServerPort);
+                this.setServerNPort(inputServerNPort);
+                this.setServerTPort(inputServerTPort);
             } else {
                 printlnMsg("Illegal input! Try again");
             }
