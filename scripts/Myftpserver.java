@@ -1,11 +1,8 @@
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.File;
-import java.nio.file.Paths;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Scanner;
 
@@ -15,17 +12,16 @@ import java.util.Scanner;
  */
 public class Myftpserver {
 
-
     public static void main(String[] args) throws IOException {
 
         Ftpserver ftpserver = new Ftpserver();
         Scanner cmdRec = new Scanner(System.in);
         System.out.print("nport: ");
-        ftpserver.serverPort = cmdRec.nextInt();
+        ftpserver.nPort = cmdRec.nextInt();
         System.out.print("tport: ");
-        ftpserver.terminatePort = cmdRec.nextInt();
+        ftpserver.tPort = cmdRec.nextInt();
         printBanner();
-        System.out.println("nport: "+ String.valueOf(ftpserver.serverPort) + "\n" + "tport: " + String.valueOf(ftpserver.terminatePort));
+        System.out.println("nport: "+ String.valueOf(ftpserver.nPort) + "\n" + "tport: " + String.valueOf(ftpserver.tPort));
         ftpserver.run();
         //ftpserver.close();
 
@@ -45,13 +41,17 @@ public class Myftpserver {
  * This is the server class.
  */
 class Ftpserver {         // for each client
-    int serverPort;
-    int terminatePort;
-    ServerSocket serverSkt;
-    Socket skt;
+    int nPort;
+    int tPort;
+    ServerSocket nportServerSkt;
+    ServerSocket tportServerSkt;
+    Socket nportSkt;
+    Socket tportSkt;
     String response;
     String cur_path = System.getProperty("user.dir");
+    //List<Thread> threadPool
     boolean ifQuit = false;
+    boolean ifTerminateNPortThread = false;
     int transFile = 0;
 
     Ftpserver() throws IOException {
@@ -59,28 +59,45 @@ class Ftpserver {         // for each client
 
     public void run() throws IOException {
         //skt = new Socket();    // init skt
-        serverSkt = new ServerSocket(serverPort);
+        nportServerSkt = new ServerSocket(nPort);
+        tportServerSkt = new ServerSocket(tPort);
 
         do {
+            System.out.println("waiting for new client");
             // try connect
             try {
-                skt = serverSkt.accept();
+                nportSkt = nportServerSkt.accept();
+                tportSkt = tportServerSkt.accept();
                 System.out.println("New client connected.");
+                Thread nportThread = new NPortThread(nportSkt);     // nport thread
+                nportThread.start();
+                Thread tportThread = new TPortThread( tportSkt, nportThread.getId() );     // tport thread
+                tportThread.start();
+                System.out.println("nport tport id: " + Long.toString(nportThread.getId()) + " " + Long.toString(tportThread.getId()) );
             } catch (IOException exc) {
                 System.out.println("Connection failed.");
                 System.exit(1);
             }
+        } while (true);                 // keep server up
 
+    }
+
+    private class NPortThread extends Thread {
+        private Socket skt;
+
+        NPortThread ( Socket skt) {
+            this.skt = skt;
+        }
+
+        public void run() {
             try {
                 DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
                 DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
-
                 // execute cmd
                 do {
                     String recMsg = msgFromClient.readUTF();
                     cmdInterface(recMsg, msgFromClient, msgToClient);
                     msgToClient.writeUTF(response);
-
                     if (0 == transFile) {             // 0:no file
                     } else if (1 == transFile) {      // send file
                         sendFile(recMsg, msgToClient);
@@ -88,7 +105,6 @@ class Ftpserver {         // for each client
                         recFile(recMsg, msgFromClient);
                     }
                     transFile = 0;
-
 
                     // if end session
                     if (true == ifQuit) {
@@ -102,11 +118,38 @@ class Ftpserver {         // for each client
                 } while (!ifQuit);          // each client
                 ifQuit = false;             // reset quit
             } catch (IOException exc) {
+                //exc.printStackTrace() ;
+            }
+        }
+    }
+
+    public class TPortThread extends Thread {
+        private Long nportThreadID;
+        private Socket skt;
+
+        // constructor
+        TPortThread ( Socket skt, Long nportThreadID ) {
+            this.nportThreadID = nportThreadID;
+            this.skt = skt;
+        }
+
+        public void run() {
+            try {
+                DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
+                DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
+                // execute cmd
+                do {
+                    String recMsg = msgFromClient.readUTF();
+                    cmdInterface(recMsg, msgFromClient, msgToClient);
+                    ifTerminateNPortThread = false;      // reset terminate
+                } while (!ifQuit);          // each client
+                ifQuit = false;             // reset quit
+            } catch (IOException exc) {
                 System.out.println("Broken pipe");
+                //exc.printStackTrace();
             }
 
-        } while (true);                 // keep server up
-
+        }
     }
 
     // all supported cmd
@@ -150,6 +193,9 @@ class Ftpserver {         // for each client
                 break;
             case "quit":                 // done
                 cmdQuit();
+                break;
+            case "terminate":
+                cmdTerminate(path);
                 break;
         }
     }
@@ -233,6 +279,12 @@ class Ftpserver {         // for each client
         response = "Bye!";
     }
 
+    private void cmdTerminate( String para) throws IOException {
+        // kill tport thread
+        ifTerminateNPortThread = true;
+
+    }
+
     private void cmdNotFound() {
         response = "Command not found.";
     }
@@ -242,10 +294,10 @@ class Ftpserver {         // for each client
     }
 
     public void close() throws IOException {
-        skt.close();
+        nportSkt.close();
     }
 
-    private void sendFile(String path, DataOutputStream dataOut) throws IOException {    //send file
+    private  void sendFile(String path, DataOutputStream dataOut) throws IOException {    //send file
         File targetFile = new File(cur_path + "/" + path.split(" ")[1]);
         if ( !targetFile.exists() ) { fileNotFound(); return;}            // if file exists
         int segFile = 0;
@@ -253,8 +305,14 @@ class Ftpserver {         // for each client
         dataOut.writeLong(targetFile.length());    // send file size
         byte[] fileBuf = new byte[4*1024];         // break file into chunks
         while ((segFile=fileInputStream.read(fileBuf))!=-1){
-            dataOut.write(fileBuf,0,segFile);
-            dataOut.flush();
+            if (ifTerminateNPortThread) {
+                dataOut.flush();
+                response = "Terminated";
+                break;
+            } else {
+                dataOut.write(fileBuf, 0, segFile);
+                dataOut.flush();
+            }
         }
         fileInputStream.close();
 
@@ -267,8 +325,15 @@ class Ftpserver {         // for each client
         long fileSize = dataIn.readLong();     // read file size
         byte[] fileBuf = new byte[4*1024];
         while (fileSize > 0 && (fileLeft = dataIn.read(fileBuf, 0, (int)Math.min(fileBuf.length, fileSize))) != -1) {
-            fileOut.write(fileBuf,0,fileLeft);
-            fileSize -= fileLeft;      // read up to file size
+            if (ifTerminateNPortThread) {
+                response = "Terminated";
+                fileOut.close();
+                targetFile.delete();
+                break;
+            } else {
+                fileOut.write(fileBuf, 0, fileLeft);
+                fileSize -= fileLeft;      // read up to file size
+            }
         }
         fileOut.close();
 

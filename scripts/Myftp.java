@@ -15,14 +15,12 @@ public class Myftp  {
     private String serverName;
     private Integer serverNPort;
     private Integer serverTPort;
-    private Socket socket;
+    private Socket nportSkt;
+    private Socket tportSkt;
     private String msgToServer;
     private int transFile;                // 0:no file; 1:send file; 2:rec file;
-    //private PrintWriter sendSkt;
-    //private BufferedReader recSkt;
-    //private DataOutputStream sendSkt;
-    //private DataInputStream recSkt;
     private boolean openPort = true;    // keep client running
+    private boolean ifTerminate = false;
 
     public static void main(String[] args) throws IOException {
         Myftp myftp = new Myftp();
@@ -31,10 +29,10 @@ public class Myftp  {
         // connect server
         try {
             // connect to server
-            myftp.socket = new Socket(myftp.serverName, myftp.serverNPort);
-
-            //myftp.recSkt = new DataInputStream( new BufferedInputStream(myftp.socket.getInputStream()));
-            //myftp.sendSkt = new DataOutputStream( myftp.socket.getOutputStream() );
+            myftp.nportSkt = new Socket(myftp.serverName, myftp.serverNPort);
+            myftp.tportSkt = new Socket(myftp.serverName, myftp.serverTPort);
+            //myftp.recNportSkt = new DataInputStream( new BufferedInputStream(myftp.socket.getInputStream()));
+            //myftp.sendNportSkt = new DataOutputStream( myftp.socket.getOutputStream() );
 
         } catch (IOException eIO) {
             myftp.printlnMsg("Connecting failed. Please check config or network.");
@@ -42,9 +40,9 @@ public class Myftp  {
             //eIO.printStackTrace();
         }
 
-        DataInputStream recSkt = new DataInputStream(myftp.socket.getInputStream());
-        DataOutputStream sendSkt = new DataOutputStream(myftp.socket.getOutputStream());
-        // send cmd
+        DataInputStream recNportSkt = new DataInputStream(myftp.nportSkt.getInputStream());
+        DataOutputStream sendNportSkt = new DataOutputStream(myftp.nportSkt.getOutputStream());
+        // input cmd
         Scanner cmdRec = new Scanner(System.in);
         String responseMsg = "";
         do {
@@ -52,25 +50,28 @@ public class Myftp  {
             myftp.printMsg("myftp> ");
             String input = cmdRec.nextLine();
 
-            // check if background cmd
-            if (input.trim().endsWith("&")) {
-                BgThreadCmd bgCmd = new BgThreadCmd(myftp, input, recSkt, sendSkt);
+            // check if go background
+            if ( "terminate" == input.trim().split(" ")[0].toLowerCase() ) {
+                myftp.inputTport( input );
+            } else if (input.trim().endsWith("&")) {
+                BgThreadCmd bgCmd = new BgThreadCmd(myftp, input, recNportSkt, sendNportSkt);
                 bgCmd.start();
             } else {
                 // execute cmd
                 myftp.cmdInterface(input);
                 if ("".equalsIgnoreCase(myftp.msgToServer)) {
-                    //System.out.println("Invalid command or path.");
+                    System.out.println("Invalid command or path.");
                 } else {
-                    sendSkt.writeUTF(myftp.msgToServer);
-                    System.out.println(responseMsg = recSkt.readUTF());
+                    sendNportSkt.writeUTF(myftp.msgToServer);
+                    System.out.println(responseMsg = recNportSkt.readUTF());
                     myftp.checkSecondMsg(responseMsg);
                 }
+
                 if (0 == myftp.transFile) {             // 0:no file
                 } else if (1 == myftp.transFile) {      // send file
-                    myftp.sendFile(myftp.msgToServer, sendSkt);
+                    myftp.sendFile(myftp.msgToServer, sendNportSkt);
                 } else if (2 == myftp.transFile) {      // rec file
-                    myftp.recFile(responseMsg, recSkt);
+                    myftp.recFile(responseMsg, recNportSkt);
                 }
                 myftp.msgToServer = "";     // reset msgToServer
                 myftp.transFile = 0;         // reset fileSign
@@ -119,6 +120,13 @@ public class Myftp  {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void inputTport(String input) throws IOException {
+        //DataInputStream recTportSkt = new DataInputStream(tportSkt.getInputStream());
+        DataOutputStream sendTportSkt = new DataOutputStream(tportSkt.getOutputStream());
+        sendTportSkt.writeUTF( input );
+        sendTportSkt.close();
     }
 
     // all supported cmd
@@ -325,7 +333,7 @@ public class Myftp  {
     }
 
     public void close() throws IOException {
-        socket.close();
+        nportSkt.close();
     }
 
 
