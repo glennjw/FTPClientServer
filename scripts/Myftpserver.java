@@ -97,12 +97,10 @@ class Ftpserver {         // for each client
                 do {
                     String recMsg = msgFromClient.readUTF();
                     cmdInterface(recMsg, msgFromClient, msgToClient);
-                    msgToClient.writeUTF(response);
-                    if (0 == transFile) {             // 0:no file
-                    } else if (1 == transFile) {      // send file
-                        sendFile(recMsg, msgToClient);
-                    } else if (2 == transFile) {      // rec file
-                        recFile(recMsg, msgFromClient);
+                    if (0 == transFile) {
+                        msgToClient.writeUTF(response);
+                    } else {
+                        transFileBlock(recMsg, msgToClient, msgFromClient);
                     }
                     transFile = 0;
 
@@ -145,7 +143,7 @@ class Ftpserver {         // for each client
                 } while (!ifQuit);          // each client
                 ifQuit = false;             // reset quit
             } catch (IOException exc) {
-                System.out.println("Broken pipe");
+                //System.out.println("Broken pipe");
                 //exc.printStackTrace();
             }
 
@@ -202,7 +200,8 @@ class Ftpserver {         // for each client
 
     private void cmdGet(String path, DataOutputStream msgToClient) throws IOException {
         File myFile = new File(cur_path + "/" + path);
-        if (myFile.exists()) { response = path + " " + myFile.length(); transFile = 1; }
+        //if (myFile.exists()) { response = path + " " + myFile.length(); transFile = 1; }
+        if (myFile.exists()) { transFile = 1; }
         else { response = "File not found."; }
     }
 
@@ -279,7 +278,7 @@ class Ftpserver {         // for each client
         response = "Bye!";
     }
 
-    private void cmdTerminate( String para) throws IOException {
+    private void cmdTerminate( String para) {
         // kill tport thread
         ifTerminateNPortThread = true;
 
@@ -297,25 +296,54 @@ class Ftpserver {         // for each client
         nportSkt.close();
     }
 
-    private  void sendFile(String path, DataOutputStream dataOut) throws IOException {    //send file
-        File targetFile = new File(cur_path + "/" + path.split(" ")[1]);
-        if ( !targetFile.exists() ) { fileNotFound(); return;}            // if file exists
-        int segFile = 0;
-        FileInputStream fileInputStream = new FileInputStream(targetFile);
-        dataOut.writeLong(targetFile.length());    // send file size
-        byte[] fileBuf = new byte[4*1024];         // break file into chunks
-        while ((segFile=fileInputStream.read(fileBuf))!=-1){
-            if (ifTerminateNPortThread) {
-                dataOut.flush();
-                response = "Terminated";
-                break;
-            } else {
-                dataOut.write(fileBuf, 0, segFile);
-                dataOut.flush();
-            }
+    private void transFileBlock(String recMsg, DataOutputStream msgToClient, DataInputStream msgFromClient) throws IOException {
+        if (1 == transFile) {      // send file
+            Thread sendFile = new SendFile(recMsg, msgToClient);
+            response = "command-ID: " + sendFile.getId();
+            msgToClient.writeUTF( response );
+            //sleep
+            sendFile.start();
+        } else if (2 == transFile) {      // rec file
+            recFile(recMsg, msgFromClient);
         }
-        fileInputStream.close();
+    }
 
+    public class SendFile extends Thread {
+        String recMsg;
+        DataOutputStream dataOut;
+
+        SendFile(String recMsg, DataOutputStream dataOut) {
+            this.recMsg = recMsg;
+            this.dataOut = dataOut;
+        }
+
+        public void run() {    //send file
+            File targetFile = new File(cur_path + "/" + recMsg.split(" ")[1]);
+            if (!targetFile.exists()) {
+                fileNotFound();
+                return;
+            }            // if file not exists
+            int segFile = 0;
+            try {
+                FileInputStream fileInputStream = new FileInputStream(targetFile);
+                dataOut.writeLong(targetFile.length());             // send file size
+                byte[] fileBuf = new byte[1024];                    // break file into chunks
+                while ((segFile = fileInputStream.read(fileBuf)) != -1) {
+                    if (ifTerminateNPortThread) {
+                        dataOut.flush();
+                        response = "Terminated";
+                        break;
+                    } else {
+                        dataOut.write(fileBuf, 0, segFile);
+                        dataOut.flush();
+                    }
+                }
+                fileInputStream.close();
+            } catch (IOException error) {
+                response = "Error during transfer.";
+            }
+
+        }
     }
 
     private void recFile(String path, DataInputStream dataIn) throws IOException {

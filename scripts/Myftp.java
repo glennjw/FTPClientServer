@@ -60,18 +60,18 @@ public class Myftp  {
                 // execute cmd
                 myftp.cmdInterface(input);
                 if ("".equalsIgnoreCase(myftp.msgToServer)) {
-                    System.out.println("Invalid command or path.");
+                    //System.out.println("Invalid command or path.");
                 } else {
                     sendNportSkt.writeUTF(myftp.msgToServer);
                     System.out.println(responseMsg = recNportSkt.readUTF());
-                    myftp.checkSecondMsg(responseMsg);
+                    myftp.checkMsg(responseMsg);
                 }
 
                 if (0 == myftp.transFile) {             // 0:no file
                 } else if (1 == myftp.transFile) {      // send file
                     myftp.sendFile(myftp.msgToServer, sendNportSkt);
                 } else if (2 == myftp.transFile) {      // rec file
-                    myftp.recFile(responseMsg, recNportSkt);
+                    myftp.recFile(myftp.msgToServer, recNportSkt);
                 }
                 myftp.msgToServer = "";     // reset msgToServer
                 myftp.transFile = 0;         // reset fileSign
@@ -105,14 +105,14 @@ public class Myftp  {
                     //System.out.println("Invalid command or path.");
                 } else {
                     sendSkt.writeUTF(myftp.msgToServer);
-                    responseMsg = recSkt.readUTF();
-                    myftp.checkSecondMsg(responseMsg);
+                    System.out.println(responseMsg = recSkt.readUTF());
+                    myftp.checkMsg(responseMsg);
                 }
                 if (0 == myftp.transFile) {             // 0:no file
                 } else if (1 == myftp.transFile) {      // send file
                     myftp.sendFile(myftp.msgToServer, sendSkt);
                 } else if (2 == myftp.transFile) {      // rec file
-                    myftp.recFile(responseMsg, recSkt);
+                    myftp.recFile(myftp.msgToServer, recSkt);
                 }
                 myftp.msgToServer = "";     // reset msgToServer
                 myftp.transFile = 0;         // reset fileSign
@@ -274,7 +274,7 @@ public class Myftp  {
     }
 
     private void recFile(String cmdMsg, DataInputStream dataIn) throws IOException {     // rec file
-        File targetFile = new File(cmdMsg.split(" ")[0]);    // create file
+        File targetFile = new File(cmdMsg.split(" ")[1]);    // create file
         FileOutputStream fileOut = new FileOutputStream(targetFile);
         int fileLeft = 0;
         long fileSize = dataIn.readLong();     // read file size
@@ -287,7 +287,7 @@ public class Myftp  {
 
     }
 
-    private void checkSecondMsg(String responseMsg) {
+    private void checkMsg(String responseMsg) {
         if ( responseMsg.toLowerCase().contains("not found")) { transFile=0;}   // reset transFile if no this file in server
     }
 
