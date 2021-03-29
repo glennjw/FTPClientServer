@@ -1,4 +1,4 @@
-Project2:
+Project3:
 
 a. Grout members:
        Ting Jiang
@@ -6,15 +6,16 @@ a. Grout members:
 
 b. How-to-run:
 
-        1. Upload Myftpserver.java to the server computer. Compile and run: 
+        1. 
            $ javac Myftpserver.java
            $ java Myftpserver
 
-        2. Upload Myftp.java to the client computer. Compile and run: 
+        2. 
            $ javac Myftp.java 
            $ java Myftp
 
-        3. On the client side, input the server address or domain name. The port is 2121. 
+        3. 
+
            
         
 c. “This project was done in its entirety by Ting Jiang and Jianwei Hao. We hereby state that we have not received unauthorized help of any form."
