@@ -6,15 +6,21 @@ a. Grout members:
 
 b. How-to-run:
 
-        1. 
-           $ javac Myftpserver.java
-           $ java Myftpserver
+        1.
+           $ cd src 
+           $ javac Participant/*.java
+           $ java Participant/Participant config.txt
 
         2. 
-           $ javac Myftp.java 
-           $ java Myftp
+           $ cd src 
+           $ javac Participant/*.java
+           $ java Participant/Participant config.txt
 
         3. 
+           $ register 2222
+           $ deregister
+           $ disconnect
+           $ reconnect 2323
 
            
         
