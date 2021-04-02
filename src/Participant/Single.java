@@ -1,8 +1,5 @@
 package Participant;
 
-import Coordinator.NPortThread;
-import Coordinator.TPortThread;
-
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -15,7 +12,7 @@ public class Single {
     public String partiID;
     public String logPath;
     public String coorIP;
-    public Integer coorNPort;        // command port
+    public Integer coorNPort = 2121;        // command port, from config.txt
     public Integer coorTPort;        // msg port
     public Socket nportSkt;
     public Socket tportSkt;
@@ -36,7 +33,7 @@ public class Single {
         this.partiID = fileContents.get(0);
         this.logPath = fileContents.get(1);
         this.coorIP = fileContents.get(2).trim().split(" ")[0];
-        this.coorNPort = Integer.parseInt( fileContents.get(2).trim().split(" ")[1] );
+        this.coorTPort = Integer.parseInt( fileContents.get(2).trim().split(" ")[1] );
         File logFile = new File( logPath );     // create log file
         logFile.createNewFile();
     }
@@ -45,19 +42,15 @@ public class Single {
         nportSkt = new Socket( coorIP, coorNPort);
         tportSkt = new Socket( coorIP, coorTPort);
 
-        Thread nportThread = new NPortThread(nportSkt);     // nport thread
+        Thread nportThread = new NPortThread( coorIP, nportSkt, partiID, logPath);     // nport thread
         nportThread.start();
-        Thread tportThread = new TPortThread( tportSkt, nportThread.getId() );     // tport thread
+        Thread tportThread = new TPortThread( coorIP, tportSkt );     // tport thread
         tportThread.start();
 
-        DataInputStream recNportSkt = new DataInputStream(nportSkt.getInputStream());
-        DataOutputStream sendNportSkt = new DataOutputStream(nportSkt.getOutputStream());
-        DataInputStream recTportSkt = new DataInputStream(tportSkt.getInputStream());
-        DataOutputStream sendTportSkt = new DataOutputStream(tportSkt.getOutputStream());
 
         // try send msg
 
-        
+
     }
 
 

@@ -6,23 +6,22 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class TPortThread extends Thread {
-    private Long nportThreadID;
-    private Socket skt;
+    String coorIP;
+    Socket skt;
     Boolean ifQuit = false;
 
-    // constructor
-    TPortThread(Socket skt, Long nportThreadID ) {
-        this.nportThreadID = nportThreadID;
+    public TPortThread(String coorIP, Socket skt ) {
+        this.coorIP = coorIP;
         this.skt = skt;
     }
 
     public void run() {
         try {
-            DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
-            DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
+            DataInputStream msgRec = new DataInputStream(skt.getInputStream());
+            DataOutputStream msgSend = new DataOutputStream(skt.getOutputStream());
             // execute cmd
             do {
-                String recMsg = msgFromClient.readUTF();
+                String recMsg = msgRec.readUTF();
             } while (!ifQuit);          // each client
             ifQuit = false;             // reset quit
         } catch (IOException exc) {
