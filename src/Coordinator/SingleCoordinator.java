@@ -20,7 +20,7 @@ public class SingleCoordinator {
     ServerSocket tportServerSkt;
     Socket nportSkt;
     Socket tportSkt;
-    ArrayList<ArrayList<String>> partiGroup = new ArrayList<>();        // participant group: [ [ ID, IP, port#, status, msg], [] ]
+    PartiGroup partiGroup = new PartiGroup();
 
 
     public SingleCoordinator(String fileName) {
