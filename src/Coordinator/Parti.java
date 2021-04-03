@@ -17,7 +17,6 @@ public class Parti {
         this.IP = IP;
         this.port = port;
         this.status = "registered";
-
     }
 
     public void addMsg(String msg) {
@@ -27,4 +26,5 @@ public class Parti {
     public void delLastMsg() {
         msgList.remove( msgList.size() - 1 );
     }
+
 }

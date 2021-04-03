@@ -36,4 +36,11 @@ public class PartiGroup extends ArrayList<Parti> {
         return false;
     }
 
+    public Parti use(String partiID) {
+        for (Parti each : this) {
+            if (each.ID == partiID) { return each; }
+        }
+        return null;
+    }
+
 }

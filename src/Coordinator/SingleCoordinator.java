@@ -1,6 +1,5 @@
 package Coordinator;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,8 +12,10 @@ import java.util.List;
 public class SingleCoordinator {
 
     int nPort = 2121;   // coordinate port
-    int tPort ;        // msg port
     int td;            // timer
+    String coorID = "000";           // coor ID
+    String coorIP = "localhost";     // coor IP
+    Integer tPort = 2222;            // msg port
 
     ServerSocket nportServerSkt;
     ServerSocket tportServerSkt;
@@ -45,7 +46,8 @@ public class SingleCoordinator {
 
     public void run() throws IOException {
         nportServerSkt = new ServerSocket(nPort);
-        //tportServerSkt = new ServerSocket(tPort);
+        tportServerSkt = new ServerSocket(tPort);
+        partiGroup.add(new Parti(coorID, coorIP, tPort));
 
         do {
             System.out.println( "waiting new " + nPort );

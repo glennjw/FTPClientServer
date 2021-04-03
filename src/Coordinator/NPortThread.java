@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 public class NPortThread extends Thread {
     private Socket skt;
     PartiGroup partiGroup;
-    Parti parti;
     String partiID;
     String response = "";
     Boolean ifQuit = false;
@@ -88,9 +87,15 @@ public class NPortThread extends Thread {
     private void cmdRegister( ArrayList<String> para, DataOutputStream msgToClient) {
         // para: [ ID, IP, port# ]
         //parti = new Parti( para.get(0), para.get(1), Integer.parseInt(para.get(2)) );
-        if ( !partiGroup.has( parti ) ) { partiGroup.add( new Parti( para.get(0), para.get(1), Integer.parseInt(para.get(2))) ); }
-        partiID = para.get(0);
+        if ( !partiGroup.has( partiID ) ) {
+            partiGroup.add( new Parti( para.get(0), para.get(1), Integer.parseInt(para.get(2))) );
+        } else {
+            Parti parti = partiGroup.use( para.get(0) );
+            parti.IP = para.get(1);
+            parti.port = Integer.parseInt(para.get(2));
+        }
         response = "";
+
 
     }
 
