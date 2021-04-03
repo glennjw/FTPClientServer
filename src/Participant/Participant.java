@@ -10,7 +10,7 @@ public class Participant {
 
         try {
             String config = args[0];
-            Single parti = new Single(config);
+            SingleParti parti = new SingleParti(config);
             parti.run();
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Please specify config file.");
@@ -20,11 +20,5 @@ public class Participant {
 
 
     }
-
-
-
-
-
-
 
 }
