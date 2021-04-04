@@ -52,6 +52,7 @@ public class NPortThread extends Thread {
             // execute cmd
             try {
                 cmdInterface(input, recNportSkt, sendNportSkt);
+                System.out.println( cmdToCoor );
                 if ("" != cmdToCoor) {
                     sendNportSkt.writeUTF(cmdToCoor);
                     System.out.println(responseMsg = recNportSkt.readUTF());
@@ -85,6 +86,7 @@ public class NPortThread extends Thread {
         // check cmd
         switch (cmd) {
             default:
+                System.out.println("");
                 cmdToCoor = "";
                 break;
             case "register":
@@ -102,11 +104,15 @@ public class NPortThread extends Thread {
             case "msend":
                 cmdMsend(para);
                 break;
+            case "quit":
+                cmdQuit();
+                break;
         }
     }
 
     private void cmdRegister(String para) throws UnknownHostException {
         cmdToCoor = "register " + partiID + " " + Inet4Address.getLocalHost().getHostAddress() + " " + para;
+
     }
 
     private void cmdDeregister(String para) {
@@ -123,6 +129,10 @@ public class NPortThread extends Thread {
 
     public void cmdMsend(String path) {
 
+    }
+
+    public void cmdQuit() {
+        System.exit(0);
     }
 
 

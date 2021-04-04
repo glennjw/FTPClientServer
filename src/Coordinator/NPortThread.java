@@ -95,8 +95,6 @@ public class NPortThread extends Thread {
             parti.port = Integer.parseInt(para.get(2));
         }
         response = "";
-
-
     }
 
     private void cmdDeregister( ArrayList<String> para, DataInputStream msgFromClient) {

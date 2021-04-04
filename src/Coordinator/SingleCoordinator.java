@@ -15,7 +15,7 @@ public class SingleCoordinator {
     int td;            // timer
     String coorID = "000";           // coor ID
     String coorIP = "localhost";     // coor IP
-    Integer tPort = 2222;            // msg port
+    Integer tPort;            // msg port
 
     ServerSocket nportServerSkt;
     ServerSocket tportServerSkt;
@@ -53,7 +53,7 @@ public class SingleCoordinator {
             System.out.println( "waiting new " + nPort );
             // try connect
             try {
-                // Thread-A : coordinate
+                // Thread-A : cmd
                 nportSkt = nportServerSkt.accept();
                 System.out.println("New client connected.");
                 Thread nportThread = new NPortThread(nportSkt, partiGroup);
