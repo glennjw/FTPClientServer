@@ -20,6 +20,7 @@ public class NPortThread extends Thread {
     Integer tPort;
 
 
+
     public NPortThread(Socket skt, PartiGroup partiGroup, Integer tPort) {
         this.skt = skt;
         this.partiGroup = partiGroup;
@@ -34,7 +35,6 @@ public class NPortThread extends Thread {
             // execute cmd
             do {
                 String recMsg = msgFromClient.readUTF();
-                System.out.println( "cmd is: " + recMsg );
                 cmdInterface(recMsg, msgFromClient, msgToClient);
                 msgToClient.writeUTF(response);
 
@@ -67,7 +67,7 @@ public class NPortThread extends Thread {
         // check cmd
         switch (cmd) {
             default:
-                System.out.println("Command not found.");
+                System.out.println("Command not supported.");
                 break;
             case "register":
                 cmdRegister(para, msgToClient);
@@ -89,9 +89,10 @@ public class NPortThread extends Thread {
 
     private void cmdRegister( ArrayList<String> para, DataOutputStream msgToClient) {
         // para: [ ID, IP, port# ]
-        if ( !partiGroup.has( partiID ) ) {
+        if ( !partiGroup.has( para.get(0) ) ) {
             partiGroup.add( new Parti( para.get(0), para.get(1), Integer.parseInt(para.get(2))) );
         } else {
+            partiID = para.get(0);
             Parti parti = partiGroup.use( para.get(0) );
             parti.IP = para.get(1);
             parti.port = Integer.parseInt(para.get(2));
@@ -101,34 +102,36 @@ public class NPortThread extends Thread {
 
     private void cmdDeregister( ArrayList<String> para, DataInputStream msgFromClient) {
         // [ ID, IP, port# ]
-        if ( partiGroup.has( partiID )) { partiGroup.remove(partiID); }
+        if ( partiGroup.has( para.get(0) )) { partiGroup.remove(para.get(0)); }
         partiID = "";
         response = "";
     }
 
     public void cmdDisconnect(ArrayList<String> para) {
         // [ ID, IP, port# ]
-        if ( partiGroup.has(partiID)) {
-            response = partiGroup.disconn(partiID) ? "" : "Failed to disconnect";
+        if ( partiGroup.has(para.get(0))) {
+            response = partiGroup.disconn(para.get(0)) ? "" : "Failed to disconnect";
         }
     }
 
-    public void cmdReconnect( ArrayList<String> para ) {
+    public void cmdReconnect( ArrayList<String> para ) throws IOException {
         // [ ID, IP, port# ]
         for ( Parti parti : partiGroup ) {
-            if ( parti.ID.equals(partiID) ) {
+            if ( parti.ID.equals(para.get(0)) ) {
                 parti.IP = para.get(1);
                 parti.port = Integer.parseInt(para.get(2));
-                parti.status = "connected";
+                parti.status = "registered";
+                partiGroup.sendMsgToIdv( tPort, parti.ID );
             }
         }
         response = "";
     }
 
     public void cmdMsend(ArrayList<String> msg) throws IOException {
-        System.out.println("msg : " + msg.get(1));
-        msgNow = msg.get(1);
-        partiGroup.sendMsg( tPort, msgNow );
+        for (int i=1; i<msg.size(); i++) { msgNow += msg.get(i)+" "; }
+        msgNow.trim();
+        partiGroup.sendMsgToGroup( tPort, msgNow );
+        msgNow = "";
     }
 
 

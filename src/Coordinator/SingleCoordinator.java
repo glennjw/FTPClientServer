@@ -49,7 +49,7 @@ public class SingleCoordinator {
         nportServerSkt = new ServerSocket(nPort);
         //tportServerSkt = new ServerSocket(tPort);
         MsgTimer msgTimer = new MsgTimer(partiGroup, td);
-        msgTimer.run();
+        msgTimer.start();
         do {
             System.out.println( "waiting new " + nPort );
             // try connect

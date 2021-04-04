@@ -20,6 +20,7 @@ public class Parti {
     }
 
     public void addMsg(String msg) {
+        System.out.println("append msg");
         msgList.add(new Message(LocalDateTime.now(), msg));
     }
 
