@@ -7,20 +7,22 @@ a. Grout members:
 b. How-to-run:
 
         1. Coordinator side:
-           $ cd src 
-           $ javac Participant/*.java
-           $ java Participant/Participant PP3-coordinator-conf.txt
+           Download folder src/Coordiantor, 
+               $ cd Coordinator
+               $ javac Coordinator/*.java
+               $ java Coordinator/Coordinator PP3-coordinator-conf.txt
 
         2. Participant side: 
-           $ cd src 
-           $ javac Participant/*.java
-           $ java Participant/Participant config.txt
+               $ cd Participant 
+               $ javac Participant/*.java
+               $ java Participant/Participant config.txt
 
         3. Run cmd:  
-           $ register 2222
-           $ deregister
-           $ disconnect
-           $ reconnect 2323
+           Cmd> register 2222
+           Cmd> msend msg1
+           Cmd> deregister
+           Cmd> disconnect
+           Cmd> reconnect 2323
 
            
         
