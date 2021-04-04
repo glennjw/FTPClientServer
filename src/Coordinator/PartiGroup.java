@@ -1,5 +1,8 @@
 package Coordinator;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 
 public class PartiGroup extends ArrayList<Parti> {
@@ -41,6 +44,25 @@ public class PartiGroup extends ArrayList<Parti> {
             if (each.ID == partiID) { return each; }
         }
         return null;
+    }
+
+    public void sendMsg(Integer tPort, String msg) throws IOException {
+        for ( Parti parti : this ) {
+            Socket skt = null;
+            if ( "registered".equals(parti.status) || "reconnected".equals(parti.status) ) {
+                try {
+                    skt = new Socket(parti.IP, parti.port);
+                    DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
+                    msgToClient.writeUTF(msg);
+                } catch (Error e) {
+                    parti.addMsg( msg );
+                }finally {
+                    if ( skt != null ) { skt.close(); }
+                }
+            } else if ( "disconnected".equals(parti.status) ) {
+                parti.addMsg(msg);
+            }
+        }
     }
 
 }

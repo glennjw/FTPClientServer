@@ -13,10 +13,10 @@ public class SingleParti {
     public String logPath;
     public String coorIP;
     public Integer coorNPort = 2121;        // command port, from config.txt
-    public Integer coorTPort;        // msg port
+    //public Integer coorTPort;        // msg port
     public Socket nportSkt;
-    public Socket tportSkt;
-    public String msgToServer;
+    //public Socket tportSkt;
+    //public String msgToServer;
 
     public SingleParti (String fileName) throws IOException {
         List<String> fileContents = new ArrayList<>();

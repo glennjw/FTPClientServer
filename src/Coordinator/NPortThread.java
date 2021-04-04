@@ -16,11 +16,14 @@ public class NPortThread extends Thread {
     String partiID;
     String response = "";
     Boolean ifQuit = false;
+    String msgNow = "";
+    Integer tPort;
 
 
-    public NPortThread(Socket skt, PartiGroup partiGroup) {
+    public NPortThread(Socket skt, PartiGroup partiGroup, Integer tPort) {
         this.skt = skt;
         this.partiGroup = partiGroup;
+        this.tPort = tPort;
 
     }
 
@@ -86,7 +89,6 @@ public class NPortThread extends Thread {
 
     private void cmdRegister( ArrayList<String> para, DataOutputStream msgToClient) {
         // para: [ ID, IP, port# ]
-        //parti = new Parti( para.get(0), para.get(1), Integer.parseInt(para.get(2)) );
         if ( !partiGroup.has( partiID ) ) {
             partiGroup.add( new Parti( para.get(0), para.get(1), Integer.parseInt(para.get(2))) );
         } else {
@@ -123,8 +125,10 @@ public class NPortThread extends Thread {
         response = "";
     }
 
-    public void cmdMsend(List<String> path) {
-
+    public void cmdMsend(ArrayList<String> msg) throws IOException {
+        System.out.println("msg : " + msg.get(1));
+        msgNow = msg.get(1);
+        partiGroup.sendMsg( tPort, msgNow );
     }
 
 

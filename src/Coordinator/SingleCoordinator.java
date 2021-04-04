@@ -18,10 +18,11 @@ public class SingleCoordinator {
     Integer tPort;            // msg port
 
     ServerSocket nportServerSkt;
-    ServerSocket tportServerSkt;
+    //ServerSocket tportServerSkt;
     Socket nportSkt;
-    Socket tportSkt;
+    //Socket tportSkt;
     PartiGroup partiGroup = new PartiGroup();
+    String msgNow;
 
 
     public SingleCoordinator(String fileName) {
@@ -46,24 +47,26 @@ public class SingleCoordinator {
 
     public void run() throws IOException {
         nportServerSkt = new ServerSocket(nPort);
-        tportServerSkt = new ServerSocket(tPort);
-        partiGroup.add(new Parti(coorID, coorIP, tPort));
-
+        //tportServerSkt = new ServerSocket(tPort);
+        MsgTimer msgTimer = new MsgTimer(partiGroup, td);
+        msgTimer.run();
         do {
             System.out.println( "waiting new " + nPort );
             // try connect
             try {
-                // Thread-A : cmd
+                // Thread-A : cmd (server mode)
                 nportSkt = nportServerSkt.accept();
                 System.out.println("New client connected.");
-                Thread nportThread = new NPortThread(nportSkt, partiGroup);
+                Thread nportThread = new NPortThread(nportSkt, partiGroup, tPort );
                 nportThread.start();
+                System.out.println("Coordinator port: " + nPort );
 
-                // Thread-B : msg
-                tportSkt = tportServerSkt.accept();
-                Thread tportThread = new TPortThread( tportSkt, nportThread.getId() );
-                tportThread.start();
-                System.out.println("Coordinate port: " + nPort );
+
+                // Thread-B : msg (client mode)
+                //tportSkt = tportServerSkt.accept();
+                //Thread tportThread = new TPortThread( tportSkt, partiGroup, msgNow );
+                //tportThread.start();
+                //System.out.println("Msg port: " + tPort );
             } catch (IOException exc) {
                 System.out.println("Connection failed.");
                 System.exit(1);

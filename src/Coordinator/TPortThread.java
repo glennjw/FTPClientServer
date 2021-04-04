@@ -6,29 +6,37 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class TPortThread extends Thread {
-    private Long nportThreadID;
     private Socket skt;
-    Boolean ifQuit = false;
+    PartiGroup partiGroup;
+    String msgNow;
 
     // constructor
-    public TPortThread(Socket skt, Long nportThreadID) {
-        this.nportThreadID = nportThreadID;
+    public TPortThread(Socket skt, PartiGroup partiGroup, String msgNow) {
+        this.partiGroup = partiGroup;
         this.skt = skt;
+        this.msgNow = msgNow;
     }
 
     public void run() {
-        try {
-            DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
-            DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
-            // execute cmd
-            do {
-                String recMsg = msgFromClient.readUTF();
-            } while (!ifQuit);          // each client
-            ifQuit = false;             // reset quit
-        } catch (IOException exc) {
-            //System.out.println("Broken pipe");
-            //exc.printStackTrace();
+
+        while (!"".equals(msgNow)) {
+            try {
+                sendMsg(msgNow);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
+
+    }
+
+    public void sendMsg(String msgNow) throws IOException {
+
+        //DataInputStream msgFromClient = new DataInputStream(skt.getInputStream());
+        DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
+        //String recMsg = msgFromClient.readUTF();
+        //partiGroup.sendMsg(msgToClient, msgNow);         // send msg to all parti
+
 
     }
 

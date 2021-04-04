@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Inet4Address;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import java.util.Scanner;
 public class NPortThread extends Thread {
     String coorIP;
     Socket nportSkt;
+    Integer tPort;
+    TPortThread tPortThread;
     Socket tportSkt;
     String partiID;
     String logPath;
@@ -110,25 +113,40 @@ public class NPortThread extends Thread {
         }
     }
 
-    private void cmdRegister(String para) throws UnknownHostException {
+    private void cmdRegister(String para) throws IOException {
+        // listen tPort (rcv)
+        tPort = Integer.parseInt(para);
+        TPortThread tPortThread = new TPortThread(tPort);
+        tPortThread.run();
+
         cmdToCoor = "register " + partiID + " " + Inet4Address.getLocalHost().getHostAddress() + " " + para;
 
     }
 
     private void cmdDeregister(String para) {
+        tPortThread.interrupt();
         cmdToCoor = "deregister " + partiID;
     }
 
     public void cmdDisconnect(String para) {
+        tPortThread.interrupt();
         cmdToCoor = "disconnect " + partiID;
     }
 
     public void cmdReconnect(String para) throws UnknownHostException {
+        // listen tPort (rcv)
+        tPort = Integer.parseInt(para);
+        TPortThread tPortThread = new TPortThread(tPort);
+        tPortThread.run();
         cmdToCoor = "reconnect " + partiID + " " + Inet4Address.getLocalHost().getHostAddress() + " " + para;
     }
 
-    public void cmdMsend(String path) {
-
+    public void cmdMsend(String para) {
+        if ("".equals(para)) {
+            System.out.println("Msg is empty!");
+        } else {
+            cmdToCoor = "msend " + partiID + " " + para;
+        }
     }
 
     public void cmdQuit() {
