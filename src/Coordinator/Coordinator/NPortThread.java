@@ -125,8 +125,9 @@ public class NPortThread extends Thread {
     }
 
     public void cmdMsend(ArrayList<String> msg) throws IOException {
-        for (int i=1; i<msg.size(); i++) { msgNow = msgNow + msg.get(i)+" "; }
+        for (int i=1; i<msg.size(); i++) { msgNow += msg.get(i)+" "; }
         msgNow.trim();
+        System.out.println("msgNow: " + msgNow);
         partiGroup.sendMsgToGroup( msgNow );
         msgNow = "";
     }

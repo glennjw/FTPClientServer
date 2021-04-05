@@ -71,11 +71,10 @@ public class NPortThread extends Thread {
         String cmd = "";
         String para = "";
         // split and assign input to cmd and para
-        input = input.trim().toLowerCase();
+        input = input.trim();
         if (-1 < input.indexOf(" ")) {
-            String[] inputSplited = input.split(" ");
-            cmd = inputSplited[0].toLowerCase();
-            para = inputSplited[1];
+            cmd = input.substring(0, input.indexOf(" ")).toLowerCase();
+            para = input.substring(input.indexOf(" "), input.length()).trim();
         } else {
             cmd = input;
         }
