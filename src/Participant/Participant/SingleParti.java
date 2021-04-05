@@ -34,21 +34,12 @@ public class SingleParti {
         this.logPath = fileContents.get(1);
         this.coorIP = fileContents.get(2).trim().split(" ")[0];
         this.coorNPort = Integer.parseInt( fileContents.get(2).trim().split(" ")[1] );
-
     }
 
     public void run () throws IOException {
         nportSkt = new Socket( coorIP, coorNPort);
-        //tportSkt = new Socket( coorIP, coorTPort);
-
         Thread nportThread = new NPortThread( coorIP, nportSkt, partiID, logPath);     // nport thread
         nportThread.start();
-        //Thread tportThread = new TPortThread( coorIP, tportSkt );     // tport thread
-        //tportThread.start();
-
-
-        // try send msg
-
 
     }
 

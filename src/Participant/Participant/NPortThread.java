@@ -3,10 +3,7 @@ package Participant;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -114,7 +111,8 @@ public class NPortThread extends Thread {
         tPort = Integer.parseInt(para);
         tPortThread = new TPortThread(tPort, partiID, logPath);
         tPortThread.start();
-        cmdToCoor = "register " + partiID + " " + Inet4Address.getLocalHost().getHostAddress() + " " + para;
+
+        cmdToCoor = "register " + partiID + " " + para;
     }
 
     private void cmdDeregister(String para) {
@@ -133,7 +131,7 @@ public class NPortThread extends Thread {
         tPort = Integer.parseInt(para);
         tPortThread = new TPortThread(tPort, partiID, logPath);
         tPortThread.start();
-        cmdToCoor = "reconnect " + partiID + " " + Inet4Address.getLocalHost().getHostAddress() + " " + para;
+        cmdToCoor = "reconnect " + partiID + " " + para;
     }
 
     public void cmdMsend(String para) {

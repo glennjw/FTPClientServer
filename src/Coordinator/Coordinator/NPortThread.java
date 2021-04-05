@@ -7,18 +7,19 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class NPortThread extends Thread {
-    private Socket skt;
+    Socket skt;
     PartiGroup partiGroup;
     String partiID;
+    String partiIP;
     String response = "";
     Boolean ifQuit = false;
     String msgNow = "";
     Integer nPort;
 
 
-
     public NPortThread(Socket skt, PartiGroup partiGroup, Integer nPort) {
         this.skt = skt;
+        this.partiIP = skt.getInetAddress().getHostAddress();
         this.partiGroup = partiGroup;
         this.nPort = nPort;
 
@@ -85,12 +86,12 @@ public class NPortThread extends Thread {
     private void cmdRegister( ArrayList<String> para, DataOutputStream msgToClient) {
         // para: [ ID, IP, port# ]
         if ( !partiGroup.has( para.get(0) ) ) {
-            partiGroup.add( new Parti( para.get(0), para.get(1), Integer.parseInt(para.get(2))) );
+            partiGroup.add( new Parti( para.get(0), partiIP, Integer.parseInt(para.get(1))) );
         } else {
             partiID = para.get(0);
             Parti parti = partiGroup.use( para.get(0) );
-            parti.IP = para.get(1);
-            parti.port = Integer.parseInt(para.get(2));
+            parti.IP = partiIP;
+            parti.port = Integer.parseInt(para.get(1));
         }
         response = "";
     }
@@ -113,8 +114,8 @@ public class NPortThread extends Thread {
         // [ ID, IP, port# ]
         for ( Parti parti : partiGroup ) {
             if ( parti.ID.equals(para.get(0)) ) {
-                parti.IP = para.get(1);
-                parti.port = Integer.parseInt(para.get(2));
+                parti.IP = partiIP;
+                parti.port = Integer.parseInt(para.get(1));
                 parti.status = "registered";
                 partiGroup.sendMsgToIdv( parti.ID );
             }
