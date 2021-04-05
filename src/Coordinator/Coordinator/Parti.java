@@ -7,16 +7,16 @@ public class Parti {
     String ID;
     String IP;
     Integer port;
-    String status;
+    String status = "alive";
     ArrayList<Message> msgList = new ArrayList<>();
 
 
-    public Parti (String ID, String IP, Integer port) {
+    public Parti (String ID, String IP, Integer port, String status) {
         // [ID, IP, port#, status, msg]
         this.ID = ID;
         this.IP = IP;
         this.port = port;
-        this.status = "alive";
+        this.status = status;
     }
 
     public void addMsg(String msg) {

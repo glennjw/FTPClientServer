@@ -47,16 +47,20 @@ public class PartiGroup extends ArrayList<Parti> {
     }
 
     public void sendMsgToGroup( String msg) throws IOException {
+        System.out.println("sendMsgToGroup");
         for ( Parti parti : this ) {
             Socket skt = null;
             if ( "registered".equals(parti.status) ) {
+                System.out.println("registered found");
                 try {
                     skt = new Socket(parti.IP, parti.port);
                     DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
                     msgToClient.writeUTF(msg);
+                    System.out.println("msg sent");
                 } catch (Error e) {
                     parti.addMsg( msg );
                 } finally {
+                    System.out.println("close send port");
                     if ( skt != null ) { skt.close(); }
                 }
             } else if ( "disconnected".equals(parti.status) ) {

@@ -19,16 +19,18 @@ public class TPortThread extends Thread {
 
     public void run() {
         try {
-            String recMsg;
-            ServerSocket tportServerSkt = new ServerSocket(tPort);
-            Socket skt = tportServerSkt.accept();
-            DataInputStream msgRec = new DataInputStream(skt.getInputStream());
+
             do {
+                String recMsg;
+                ServerSocket tportServerSkt = new ServerSocket(tPort);
+                Socket skt = tportServerSkt.accept();
+                DataInputStream msgRec = new DataInputStream(skt.getInputStream());
                 recMsg = msgRec.readUTF();
                 if (!"".equals(msgRec)) {System.out.println("\nIncoming: " + recMsg); }
                 logMsg( recMsg );
+                tportServerSkt.close();
             } while (!ifQuit);          // each client
-            tportServerSkt.close();			       
+
         } catch (IOException exc) {
             //System.out.println("Broken pipe");
             //exc.printStackTrace();

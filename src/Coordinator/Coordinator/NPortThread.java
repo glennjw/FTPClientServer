@@ -84,9 +84,9 @@ public class NPortThread extends Thread {
     }
 
     private void cmdRegister( ArrayList<String> para, DataOutputStream msgToClient) {
-        // para: [ ID, IP, port# ]
+        // para: [ ID, port# ]
         if ( !partiGroup.has( para.get(0) ) ) {
-            partiGroup.add( new Parti( para.get(0), partiIP, Integer.parseInt(para.get(1))) );
+            partiGroup.add( new Parti( para.get(0), partiIP, Integer.parseInt(para.get(1)), "registered") );
         } else {
             partiID = para.get(0);
             Parti parti = partiGroup.use( para.get(0) );
@@ -125,7 +125,7 @@ public class NPortThread extends Thread {
     }
 
     public void cmdMsend(ArrayList<String> msg) throws IOException {
-        for (int i=1; i<msg.size(); i++) { msgNow += msg.get(i)+" "; }
+        for (int i=1; i<msg.size(); i++) { msgNow = msgNow + msg.get(i)+" "; }
         msgNow.trim();
         partiGroup.sendMsgToGroup( msgNow );
         msgNow = "";
