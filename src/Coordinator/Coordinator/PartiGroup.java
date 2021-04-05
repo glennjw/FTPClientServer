@@ -47,11 +47,11 @@ public class PartiGroup extends ArrayList<Parti> {
     }
 
     public void sendMsgToGroup( String msg) throws IOException {
-        System.out.println("sendMsgToGroup");
+        System.out.println( "sendMsgToGroup: " + this.size() );
         for ( Parti parti : this ) {
             Socket skt = null;
             if ( "registered".equals(parti.status) ) {
-                System.out.println("registered found");
+                System.out.println("registered found" + parti.ID);
                 try {
                     skt = new Socket(parti.IP, parti.port);
                     DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
