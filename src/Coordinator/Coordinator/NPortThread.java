@@ -92,6 +92,7 @@ public class NPortThread extends Thread {
             Parti parti = partiGroup.use( para.get(0) );
             parti.IP = partiIP;
             parti.port = Integer.parseInt(para.get(1));
+            parti.status = "registered";
         }
         response = "";
     }

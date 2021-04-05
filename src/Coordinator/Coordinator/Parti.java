@@ -16,7 +16,7 @@ public class Parti {
         this.ID = ID;
         this.IP = IP;
         this.port = port;
-        this.status = "registered";
+        this.status = "alive";
     }
 
     public void addMsg(String msg) {
