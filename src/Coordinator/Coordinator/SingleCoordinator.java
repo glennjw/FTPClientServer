@@ -11,19 +11,12 @@ import java.util.List;
 
 public class SingleCoordinator {
 
-    int nPort = 2121;   // coordinate port
+    int nPort;         // coordinator port
     int td;            // timer
-    String coorID = "000";           // coor ID
-    String coorIP = "localhost";     // coor IP
-    Integer tPort;            // msg port
 
     ServerSocket nportServerSkt;
-    //ServerSocket tportServerSkt;
     Socket nportSkt;
-    //Socket tportSkt;
     PartiGroup partiGroup = new PartiGroup();
-    String msgNow;
-
 
     public SingleCoordinator(String fileName) {
         List<String> fileContents = new ArrayList<>();
@@ -37,12 +30,8 @@ public class SingleCoordinator {
         } catch (IOException e) {
             System.out.println("Cannot open file.");
         }
-        this.tPort = Integer.parseInt( fileContents.get(0).trim() );
+        this.nPort = Integer.parseInt( fileContents.get(0).trim() );
         this.td = Integer.parseInt( fileContents.get(1).trim() );
-        if ( nPort == tPort ) {
-            System.out.println("Msg port is occupied.");
-            System.exit(1);
-        }
     }
 
     public void run() throws IOException {
@@ -51,22 +40,13 @@ public class SingleCoordinator {
         MsgTimer msgTimer = new MsgTimer(partiGroup, td);
         msgTimer.start();
         do {
-            System.out.println( "waiting new " + nPort );
-            // try connect
+            System.out.println( "Waiting participants on " + nPort );
             try {
                 // Thread-A : cmd (server mode)
                 nportSkt = nportServerSkt.accept();
                 System.out.println("New client connected.");
-                Thread nportThread = new NPortThread(nportSkt, partiGroup, tPort );
+                Thread nportThread = new NPortThread(nportSkt, partiGroup, nPort );
                 nportThread.start();
-                System.out.println("Coordinator port: " + nPort );
-
-
-                // Thread-B : msg (client mode)
-                //tportSkt = tportServerSkt.accept();
-                //Thread tportThread = new TPortThread( tportSkt, partiGroup, msgNow );
-                //tportThread.start();
-                //System.out.println("Msg port: " + tPort );
             } catch (IOException exc) {
                 System.out.println("Connection failed.");
                 System.exit(1);

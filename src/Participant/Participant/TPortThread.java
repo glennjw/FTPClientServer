@@ -1,17 +1,20 @@
 package Participant;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class TPortThread extends Thread {
     Integer tPort;
+    String partiID;
+    String logFileName = "message-log.txt";
     Boolean ifQuit = false;
 
-    public TPortThread(Integer tPort) {
+
+    public TPortThread(Integer tPort, String partiID, String logPath) {
         this.tPort = tPort;
+        this.partiID = partiID;
+        this.logFileName = logPath;
     }
 
     public void run() {
@@ -21,12 +24,9 @@ public class TPortThread extends Thread {
                 ServerSocket tportServerSkt = new ServerSocket(tPort);
                 Socket skt = tportServerSkt.accept();
                 DataInputStream msgRec = new DataInputStream(skt.getInputStream());
-                DataOutputStream msgSend = new DataOutputStream(skt.getOutputStream());
-
                 recMsg = msgRec.readUTF();
-                System.out.println("Incoming: " + recMsg );
-                //ifQuit = "///".equals(recMsg);
-                //if (!ifQuit) { System.out.println("Incoming: " + recMsg ); }
+                if (!"".equals(msgRec)) {System.out.println("\nIncoming: " + recMsg); }
+                logMsg( recMsg );
                 tportServerSkt.close();
             } while (!ifQuit);          // each client
 
@@ -36,6 +36,23 @@ public class TPortThread extends Thread {
             //exc.printStackTrace();
         }
 
+    }
+
+    public void logMsg(String msg) throws IOException {
+        msg = msg + "\n";
+        File file;
+        FileWriter fileWriter = null;
+        try {
+            fileWriter = new FileWriter(logFileName, true);
+            fileWriter.write(msg); 
+        }
+        catch (IOException e) {
+            file = new File(logFileName);
+            file.createNewFile();
+            fileWriter = new FileWriter(file, true);
+            fileWriter.write(msg);
+        }
+        fileWriter.close();
     }
 
 }

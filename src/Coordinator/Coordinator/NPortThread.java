@@ -3,12 +3,8 @@ package Coordinator;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class NPortThread extends Thread {
     private Socket skt;
@@ -17,14 +13,14 @@ public class NPortThread extends Thread {
     String response = "";
     Boolean ifQuit = false;
     String msgNow = "";
-    Integer tPort;
+    Integer nPort;
 
 
 
-    public NPortThread(Socket skt, PartiGroup partiGroup, Integer tPort) {
+    public NPortThread(Socket skt, PartiGroup partiGroup, Integer nPort) {
         this.skt = skt;
         this.partiGroup = partiGroup;
-        this.tPort = tPort;
+        this.nPort = nPort;
 
     }
 
@@ -35,10 +31,9 @@ public class NPortThread extends Thread {
             // execute cmd
             do {
                 String recMsg = msgFromClient.readUTF();
+                System.out.println("cmd: " + recMsg);
                 cmdInterface(recMsg, msgFromClient, msgToClient);
                 msgToClient.writeUTF(response);
-
-                // if end session
                 if (true == ifQuit) {
                     msgFromClient.close();
                     msgToClient.close();
@@ -102,7 +97,7 @@ public class NPortThread extends Thread {
 
     private void cmdDeregister( ArrayList<String> para, DataInputStream msgFromClient) {
         // [ ID, IP, port# ]
-        if ( partiGroup.has( para.get(0) )) { partiGroup.remove(para.get(0)); }
+        if ( partiGroup.has( para.get(0) )) { partiGroup.remove( partiGroup.get(para.get(0)) ); }
         partiID = "";
         response = "";
     }
@@ -121,7 +116,7 @@ public class NPortThread extends Thread {
                 parti.IP = para.get(1);
                 parti.port = Integer.parseInt(para.get(2));
                 parti.status = "registered";
-                partiGroup.sendMsgToIdv( tPort, parti.ID );
+                partiGroup.sendMsgToIdv( parti.ID );
             }
         }
         response = "";
@@ -130,7 +125,7 @@ public class NPortThread extends Thread {
     public void cmdMsend(ArrayList<String> msg) throws IOException {
         for (int i=1; i<msg.size(); i++) { msgNow += msg.get(i)+" "; }
         msgNow.trim();
-        partiGroup.sendMsgToGroup( tPort, msgNow );
+        partiGroup.sendMsgToGroup( msgNow );
         msgNow = "";
     }
 

@@ -56,7 +56,8 @@ public class NPortThread extends Thread {
                 cmdInterface(input, recNportSkt, sendNportSkt);
                 if ("" != cmdToCoor) {
                     sendNportSkt.writeUTF(cmdToCoor);
-                    System.out.println(responseMsg = recNportSkt.readUTF());
+                    responseMsg = recNportSkt.readUTF();
+                    if (!"".equals(responseMsg)) { System.out.println(responseMsg); }
                 } else {
                     //System.out.println("Pls check command!");
                 }
@@ -102,7 +103,7 @@ public class NPortThread extends Thread {
                 cmdMsend(para);
                 break;
             case "quit":
-                cmdQuit();
+                cmdQuit(para);
                 break;
         }
     }
@@ -111,7 +112,7 @@ public class NPortThread extends Thread {
         //tPortThread.interrupt();
         // listen tPort (rcv)
         tPort = Integer.parseInt(para);
-        tPortThread = new TPortThread(tPort);
+        tPortThread = new TPortThread(tPort, partiID, logPath);
         tPortThread.start();
         cmdToCoor = "register " + partiID + " " + Inet4Address.getLocalHost().getHostAddress() + " " + para;
     }
@@ -130,7 +131,7 @@ public class NPortThread extends Thread {
         tPortThread.interrupt();
         // listen tPort (rcv)
         tPort = Integer.parseInt(para);
-        tPortThread = new TPortThread(tPort);
+        tPortThread = new TPortThread(tPort, partiID, logPath);
         tPortThread.start();
         cmdToCoor = "reconnect " + partiID + " " + Inet4Address.getLocalHost().getHostAddress() + " " + para;
     }
@@ -143,9 +144,10 @@ public class NPortThread extends Thread {
         }
     }
 
-    public void cmdQuit() {
+    private void cmdQuit(String para) {
+        tPortThread.interrupt();
+        cmdToCoor = "deregister " + partiID;
         System.exit(0);
     }
-
 
 }

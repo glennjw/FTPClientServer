@@ -34,8 +34,7 @@ public class SingleParti {
         this.logPath = fileContents.get(1);
         this.coorIP = fileContents.get(2).trim().split(" ")[0];
         this.coorNPort = Integer.parseInt( fileContents.get(2).trim().split(" ")[1] );
-        File logFile = new File( logPath );     // create log file
-        logFile.createNewFile();
+
     }
 
     public void run () throws IOException {

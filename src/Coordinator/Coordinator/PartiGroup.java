@@ -15,18 +15,18 @@ public class PartiGroup extends ArrayList<Parti> {
 
     }
 
-    public boolean has(String partiID) {
+    public boolean has (String partiID) {
         for (Parti each : this) {
             if (each.ID.equals( partiID )) { return true; }
         }
         return false;
     }
 
-    public boolean has(Parti parti) {
+    public Parti get (String partiID) {
         for (Parti each : this) {
-            if (each.ID.equals( parti.ID )) { return true; }
+            if (each.ID.equals( partiID )) { return each; }
         }
-        return false;
+        return null;
     }
 
     public boolean disconn(String partiID) {
@@ -41,12 +41,12 @@ public class PartiGroup extends ArrayList<Parti> {
 
     public Parti use(String partiID) {
         for (Parti each : this) {
-            if (each.ID == partiID) { return each; }
+            if (each.ID.equals(partiID)) { return each; }
         }
         return null;
     }
 
-    public void sendMsgToGroup(Integer tPort, String msg) throws IOException {
+    public void sendMsgToGroup( String msg) throws IOException {
         for ( Parti parti : this ) {
             Socket skt = null;
             if ( "registered".equals(parti.status) ) {
@@ -66,7 +66,7 @@ public class PartiGroup extends ArrayList<Parti> {
         }
     }
 
-    public void sendMsgToIdv(Integer tPort, String partiID) throws IOException {
+    public void sendMsgToIdv( String partiID) throws IOException {
         for ( Parti parti : this ) {
             Socket skt = null;
             if ( partiID.equals(parti.ID) && !parti.msgList.isEmpty()) {
