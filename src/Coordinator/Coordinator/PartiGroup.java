@@ -69,15 +69,14 @@ public class PartiGroup extends ArrayList<Parti> {
 
     public void sendMsgToIdv( String partiID) throws IOException {
         for ( Parti parti : this ) {
-            Socket skt = null;
             if ( partiID.equals(parti.ID) && !parti.msgList.isEmpty()) {
                 System.out.println("reading msg");
                 try {
+                    Socket skt;
                     skt = new Socket(parti.IP, parti.port);
                     DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
-
                     for (int i=0; i<parti.msgList.size(); i++) {
-                        System.out.println("msgList size: " + parti.msgList.size());
+                        System.out.println("Sending msg: " + parti.msgList.size());
                         msgToClient.writeUTF(parti.msgList.get(i).msg);
                         parti.msgList.remove(i);
                         i--;
@@ -92,10 +91,9 @@ public class PartiGroup extends ArrayList<Parti> {
                     */
 
                     msgToClient.writeUTF("///");     // end sending
+                    skt.close();
                 } catch (Error e) {
                     System.out.println("Connect to " + parti.ID + " failed!");
-                }finally {
-                    if ( skt != null ) { skt.close(); }
                 }
             }
             break;
