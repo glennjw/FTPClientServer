@@ -1,28 +1,29 @@
 Project3:
 
-a. Grout members:
+a. Group members:
        Ting Jiang
        Jianwei Hao
 
 b. How-to-run:
 
         1. Coordinator side:
-           Download folder src/Coordiantor, 
-               $ cd Coordinator
-               $ javac Coordinator/*.java
-               $ java Coordinator/Coordinator PP3-coordinator-conf.txt
-
+           1). Download folder src/Coordiantor.
+           2). $ cd Coordinator
+           3). Change port and td in PP3-coordinator-conf.txt. 
+           4). $ bash run.sh
+ 
         2. Participant side: 
-               $ cd Participant 
-               $ javac Participant/*.java
-               $ java Participant/Participant config.txt
-
+           1). Download folder src/Participant.
+           2). $ cd Participant 
+           3). Change config in config.txt.  
+           4). $ bash run.sh
+ 
         3. Run cmd:  
-           Cmd> register 2222
+           Cmd> register 3333 
            Cmd> msend msg1
            Cmd> deregister
            Cmd> disconnect
-           Cmd> reconnect 2323
+           Cmd> reconnect 3334 
 
            
         

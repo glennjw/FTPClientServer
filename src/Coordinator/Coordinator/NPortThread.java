@@ -34,9 +34,7 @@ public class NPortThread extends Thread {
                 String recMsg = msgFromClient.readUTF();
                 System.out.println("cmd: " + recMsg);
                 cmdInterface(recMsg, msgFromClient, msgToClient);
-                System.out.println("b4 response: ");
                 msgToClient.writeUTF(response);
-                System.out.println("af response: ");
                 if (true == ifQuit) {
                     msgFromClient.close();
                     msgToClient.close();

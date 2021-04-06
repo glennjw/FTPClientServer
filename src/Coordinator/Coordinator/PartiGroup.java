@@ -70,13 +70,11 @@ public class PartiGroup extends ArrayList<Parti> {
     public void sendMsgToIdv( String partiID) throws IOException {
         for ( Parti parti : this ) {
             if ( partiID.equals(parti.ID) && !parti.msgList.isEmpty()) {
-                System.out.println("reading msg");
                 try {
                     Socket skt;
                     for (int i=0; i<parti.msgList.size(); i++) {
                         skt = new Socket(parti.IP, parti.port);
                         DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
-                        System.out.println("Sending msg: " + parti.msgList.size());
                         msgToClient.writeUTF(parti.msgList.get(i).msg);
                         parti.msgList.remove(i);
                         i--;

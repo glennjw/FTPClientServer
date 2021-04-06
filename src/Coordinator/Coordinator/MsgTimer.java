@@ -18,7 +18,6 @@ public class MsgTimer extends Thread {
     public void run() {
         do {
             if (0 < partiGroup.size()) {
-                System.out.println("checking msg duration");
                 for (Parti parti : partiGroup) {
                     Integer msgNum = parti.msgList.size();
                     for (int i = 0; i < msgNum; i++) {
