@@ -59,8 +59,9 @@ public class PartiGroup extends ArrayList<Parti> {
                 } catch (Error e) {
                     parti.addMsg( msg );
                 } finally {
-                    System.out.println("close send port");
+                    System.out.println("b4 close send port");
                     if ( skt != null ) { skt.close(); }
+                    System.out.println("b4 close send port");
                 }
             } else if ( "disconnected".equals(parti.status) ) {
                 //System.out.println("adding msg to disconnected");
