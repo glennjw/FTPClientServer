@@ -59,15 +59,15 @@ public class PartiGroup extends ArrayList<Parti> {
                 } catch (Error e) {
                     parti.addMsg( msg );
                 } finally {
-                    System.out.println("b4 close send port");
                     if ( skt != null ) { skt.close(); }
-                    System.out.println("b4 close send port");
+                    System.out.println("af close send port");
                 }
             } else if ( "disconnected".equals(parti.status) ) {
                 //System.out.println("adding msg to disconnected");
                 parti.addMsg(msg);
             }
         }
+        System.out.println("af sendMsgToGroup");
     }
 
     public void sendMsgToIdv( String partiID) throws IOException {
