@@ -56,16 +56,13 @@ public class PartiGroup extends ArrayList<Parti> {
                     skt = new Socket(parti.IP, parti.port);
                     DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
                     msgToClient.writeUTF(msg);
+                    skt.close();
+                    System.out.println("af close send port");
                 } catch (Error e) {
                     parti.addMsg( msg );
-                } finally {
-                    if ( skt != null ) {
-                        System.out.println("closing send port");
-                        skt.close();
-                        System.out.println("closd send port");
-                    }
-                    System.out.println("af close send port");
                 }
+                System.out.println("af send registered port");
+
             } else if ( "disconnected".equals(parti.status) ) {
                 //System.out.println("adding msg to disconnected");
                 parti.addMsg(msg);
