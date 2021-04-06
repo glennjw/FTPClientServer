@@ -59,13 +59,20 @@ public class PartiGroup extends ArrayList<Parti> {
                 } catch (Error e) {
                     parti.addMsg( msg );
                 } finally {
-                    if ( skt != null ) { skt.close(); }
+                    if ( skt != null ) {
+                        System.out.println("closing send port");
+                        skt.close();
+                        System.out.println("closd send port");
+                    }
                     System.out.println("af close send port");
                 }
             } else if ( "disconnected".equals(parti.status) ) {
                 //System.out.println("adding msg to disconnected");
                 parti.addMsg(msg);
+            } else {
+                // Drop msg
             }
+            System.out.println("done foreach loop");
         }
         System.out.println("af sendMsgToGroup");
     }
