@@ -72,26 +72,18 @@ public class PartiGroup extends ArrayList<Parti> {
             if ( partiID.equals(parti.ID) && !parti.msgList.isEmpty()) {
                 System.out.println("reading msg");
                 try {
-                    Socket skt;
-                    skt = new Socket(parti.IP, parti.port);
-                    DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
                     for (int i=0; i<parti.msgList.size(); i++) {
+                        Socket skt;
+                        skt = new Socket(parti.IP, parti.port);
+                        DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
                         System.out.println("Sending msg: " + parti.msgList.size());
                         msgToClient.writeUTF(parti.msgList.get(i).msg);
                         parti.msgList.remove(i);
                         i--;
+                        skt.close();
                     }
-                    /**
-                    for ( Message msg : parti.msgList ) {
-                        System.out.println(parti.msgList.get(0));
-                        msgToClient.writeUTF(msg.time + " " + msg.msg);
-                        parti.msgList.remove(msg);
-                        System.out.println(parti.msgList.get(0));
-                    }
-                    */
 
-                    msgToClient.writeUTF("///");     // end sending
-                    skt.close();
+
                 } catch (Error e) {
                     System.out.println("Connect to " + parti.ID + " failed!");
                 }
