@@ -34,7 +34,9 @@ public class NPortThread extends Thread {
                 String recMsg = msgFromClient.readUTF();
                 System.out.println("cmd: " + recMsg);
                 cmdInterface(recMsg, msgFromClient, msgToClient);
+                System.out.println("b4 response: ");
                 msgToClient.writeUTF(response);
+                System.out.println("af response: ");
                 if (true == ifQuit) {
                     msgFromClient.close();
                     msgToClient.close();
@@ -127,9 +129,10 @@ public class NPortThread extends Thread {
     public void cmdMsend(ArrayList<String> msg) throws IOException {
         for (int i=1; i<msg.size(); i++) { msgNow += msg.get(i)+" "; }
         msgNow.trim();
-        System.out.println("msgNow: " + msgNow);
         partiGroup.sendMsgToGroup( msgNow );
         msgNow = "";
+        System.out.println("sent done");
+        response = "";
     }
 
 

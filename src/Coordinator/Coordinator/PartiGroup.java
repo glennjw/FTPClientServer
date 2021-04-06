@@ -51,12 +51,11 @@ public class PartiGroup extends ArrayList<Parti> {
         for ( Parti parti : this ) {
             Socket skt = null;
             if ( "registered".equals(parti.status) ) {
-                System.out.println("registered found" + parti.ID);
+                System.out.println("registered found: " + parti.ID);
                 try {
                     skt = new Socket(parti.IP, parti.port);
                     DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
                     msgToClient.writeUTF(msg);
-                    System.out.println("msg sent");
                 } catch (Error e) {
                     parti.addMsg( msg );
                 } finally {
