@@ -132,7 +132,6 @@ public class NPortThread extends Thread {
         partiGroup.sendMsgToGroup( msgNow );
         msgNow = "";
         response = "";
-        System.out.println("sent done");
     }
 
 

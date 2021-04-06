@@ -18,11 +18,13 @@ public class MsgTimer extends Thread {
     public void run() {
         do {
             if (0 < partiGroup.size()) {
+                System.out.println("checking msg duration");
                 for (Parti parti : partiGroup) {
                     Integer msgNum = parti.msgList.size();
                     for (int i = 0; i < msgNum; i++) {
                         if (td < (int) Duration.between(parti.msgList.get(i).time, LocalDateTime.now()).getSeconds()) {
-                            //System.out.println("removed: " + parti.ID + " " + parti.msgList.get(i).time + " " + parti.msgList.get(i).msg);
+                            System.out.println((int) Duration.between(parti.msgList.get(i).time, LocalDateTime.now()).getSeconds());
+                            System.out.println("removed: " + parti.ID + " " + parti.msgList.get(i).time + " " + parti.msgList.get(i).msg);
                             parti.msgList.remove(i);
                             i--;
                             msgNum--;
