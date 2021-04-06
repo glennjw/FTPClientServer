@@ -72,8 +72,8 @@ public class PartiGroup extends ArrayList<Parti> {
             if ( partiID.equals(parti.ID) && !parti.msgList.isEmpty()) {
                 System.out.println("reading msg");
                 try {
+                    Socket skt;
                     for (int i=0; i<parti.msgList.size(); i++) {
-                        Socket skt;
                         skt = new Socket(parti.IP, parti.port);
                         DataOutputStream msgToClient = new DataOutputStream(skt.getOutputStream());
                         System.out.println("Sending msg: " + parti.msgList.size());
