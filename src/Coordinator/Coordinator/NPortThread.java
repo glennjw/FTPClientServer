@@ -121,9 +121,9 @@ public class NPortThread extends Thread {
             if ( parti.ID.equals(para.get(0)) ) {
                 parti.IP = partiIP;
                 parti.port = Integer.parseInt(para.get(1));
+                partiGroup.sendMsgToIdv( parti.ID );
                 parti.status = "registered";
                 partiStatus = parti.status; 
-                partiGroup.sendMsgToIdv( parti.ID );
             }
         }
         response = "";
@@ -132,7 +132,7 @@ public class NPortThread extends Thread {
     public void cmdMsend(ArrayList<String> msg) throws IOException {
         for (int i=1; i<msg.size(); i++) { msgNow += msg.get(i)+" "; }
         msgNow.trim();
-        if ( "registered".equals(partiStatus) ) {
+        if ( "registered".equals(partiStatus) || "disconnected".equals(partiStatus) ) {
             partiGroup.sendMsgToGroup( msgNow );
             response = ""; 
         } else {
