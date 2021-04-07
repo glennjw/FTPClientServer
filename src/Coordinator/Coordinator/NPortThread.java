@@ -11,6 +11,7 @@ public class NPortThread extends Thread {
     PartiGroup partiGroup;
     String partiID;
     String partiIP;
+    String partiStatus = "alive"; 
     String response = "";
     Boolean ifQuit = false;
     String msgNow = "";
@@ -85,14 +86,15 @@ public class NPortThread extends Thread {
 
     private void cmdRegister( ArrayList<String> para, DataOutputStream msgToClient) {
         // para: [ ID, port# ]
+        partiStatus = "registered"; 
         if ( !partiGroup.has( para.get(0) ) ) {
-            partiGroup.add( new Parti( para.get(0), partiIP, Integer.parseInt(para.get(1)), "registered") );
+            partiGroup.add( new Parti( para.get(0), partiIP, Integer.parseInt(para.get(1)), partiStatus) );
         } else {
             partiID = para.get(0);
             Parti parti = partiGroup.use( para.get(0) );
             parti.IP = partiIP;
             parti.port = Integer.parseInt(para.get(1));
-            parti.status = "registered";
+            parti.status = partiStatus;
         }
         response = "";
     }
@@ -101,6 +103,7 @@ public class NPortThread extends Thread {
         // [ ID, IP, port# ]
         if ( partiGroup.has( para.get(0) )) { partiGroup.remove( partiGroup.get(para.get(0)) ); }
         partiID = "";
+        partiStatus = "alive";
         response = "";
     }
 
@@ -108,6 +111,7 @@ public class NPortThread extends Thread {
         // [ ID, IP, port# ]
         if ( partiGroup.has(para.get(0))) {
             response = partiGroup.disconn(para.get(0)) ? "" : "Failed to disconnect";
+            partiStatus = partiGroup.use(para.get(0)).status;
         }
     }
 
@@ -118,6 +122,7 @@ public class NPortThread extends Thread {
                 parti.IP = partiIP;
                 parti.port = Integer.parseInt(para.get(1));
                 parti.status = "registered";
+                partiStatus = parti.status; 
                 partiGroup.sendMsgToIdv( parti.ID );
             }
         }
@@ -127,9 +132,13 @@ public class NPortThread extends Thread {
     public void cmdMsend(ArrayList<String> msg) throws IOException {
         for (int i=1; i<msg.size(); i++) { msgNow += msg.get(i)+" "; }
         msgNow.trim();
-        partiGroup.sendMsgToGroup( msgNow );
+        if ( "registered".equals(partiStatus) ) {
+            partiGroup.sendMsgToGroup( msgNow );
+            response = ""; 
+        } else {
+            response = "Failed! offline.";
+        }     
         msgNow = "";
-        response = "";
     }
 
 
